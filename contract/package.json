@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@aptos-labs/wallet-adapter-ant-design": "^3.0.9",
+    "@aptos-labs/wallet-adapter-react": "^3.5.9",
+    "@chakra-ui/react": "^2.8.2",
+    "@emotion/react": "^11.13.0",
+    "@emotion/styled": "^11.13.0",
+    "aptos": "^1.21.0",
+    "framer-motion": "^11.3.24",
+    "petra-plugin-wallet-adapter": "^0.4.5"
+  }
+}
