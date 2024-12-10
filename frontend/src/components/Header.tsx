@@ -1,20 +1,90 @@
-import React from 'react';
-import { Flex, Heading, Spacer, Text } from '@chakra-ui/react';
-import WalletConnector from './WalletConnector';
+import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Container,
+  Flex,
+  HStack,
+  Link,
+  useBreakpointValue,
+  Icon,
+} from '@chakra-ui/react';
+import { Menu, Wallet } from 'lucide-react';
+import { useWallet } from '@aptos-labs/wallet-adapter-react';
 
-const Header: React.FC = () => {
+export default function Header() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const { connect, account, connected, disconnect } = useWallet();
+
+  const navItems = [
+    { path: '/tribe', label: 'MY TRIBE' },
+    { path: '/mint', label: 'MINT GORILLA' },
+    { path: '/evolve', label: 'EVOLVE' },
+    { path: '/leaderboard', label: 'LEADERBOARD' },
+  ];
+
+  const handleWalletClick = () => {
+    if (connected) {
+      disconnect();
+    } else {
+      connect();
+    }
+  };
+
   return (
-    <Flex align="center" justify="space-between" wrap="wrap" padding="1.5rem" bg="rgba(0,0,0,0.5)">
-      <Flex align="center" mr={5}>
-        <Heading as="h1" size="lg" letterSpacing={'tighter'} color="white">
-          CryptoGorilla Game
-        </Heading>
-      </Flex>
-      <Spacer />
-      <Text color="white" mr={4}>Complete weekly quests and earn</Text>
-      <WalletConnector />
-    </Flex>
-  );
-};
+    <Box bg="blackAlpha.900" py={4}>
+      <Container maxW="container.xl">
+        <Flex justify="space-between" align="center">
+          <Link 
+            as={RouterLink} 
+            to="/"
+            fontSize="2xl"
+            fontWeight="bold"
+            color="#CCFF00"
+            _hover={{ textDecoration: 'none' }}
+          >
+            TRIBE
+          </Link>
 
-export default Header;
+          <HStack spacing={8} display={{ base: 'none', md: 'flex' }}>
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                as={RouterLink}
+                to={item.path}
+                color={location.pathname === item.path ? '#CCFF00' : 'white'}
+                _hover={{ color: '#CCFF00' }}
+                transition="colors 0.2s"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </HStack>
+
+          <HStack spacing={4}>
+            <Button
+              leftIcon={<Icon as={Wallet} />}
+              onClick={handleWalletClick}
+              colorScheme={connected ? 'green' : 'gray'}
+              variant="outline"
+            >
+              {connected ? 'Connected' : 'Connect Wallet'}
+            </Button>
+            {isMobile && (
+              <Button
+                p={2}
+                variant="ghost"
+                color="white"
+                _hover={{ bg: 'whiteAlpha.200' }}
+              >
+                <Icon as={Menu} boxSize={6} />
+              </Button>
+            )}
+          </HStack>
+        </Flex>
+      </Container>
+    </Box>
+  );
+}
