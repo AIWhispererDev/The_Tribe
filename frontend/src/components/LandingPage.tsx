@@ -13,6 +13,7 @@ import {
   Link,
   Text,
   useBreakpointValue,
+  VStack,
 } from '@chakra-ui/react';
 
 export default function LandingPage() {
@@ -77,17 +78,17 @@ export default function LandingPage() {
           </Link>
           
           <HStack spacing={8} display={{ base: 'none', md: 'flex' }}>
-            <Link as={RouterLink} to="/nucks" _hover={{ color: '#CCFF00' }} transition="colors 0.2s">
-              NUCKS
+            <Link as={RouterLink} to="/tribe" _hover={{ color: '#CCFF00' }} transition="colors 0.2s">
+              MY TRIBE
             </Link>
-            <Link as={RouterLink} to="/auonc" _hover={{ color: '#CCFF00' }} transition="colors 0.2s">
-              AUONC
+            <Link as={RouterLink} to="/mint" _hover={{ color: '#CCFF00' }} transition="colors 0.2s">
+              MINT GORILLA
             </Link>
-            <Link as={RouterLink} to="/pyrocis" _hover={{ color: '#CCFF00' }} transition="colors 0.2s">
-              PYROCIS
+            <Link as={RouterLink} to="/evolve" _hover={{ color: '#CCFF00' }} transition="colors 0.2s">
+              EVOLVE
             </Link>
-            <Link as={RouterLink} to="/auot" _hover={{ color: '#CCFF00' }} transition="colors 0.2s">
-              AUOT
+            <Link as={RouterLink} to="/leaderboard" _hover={{ color: '#CCFF00' }} transition="colors 0.2s">
+              LEADERBOARD
             </Link>
           </HStack>
           
@@ -262,6 +263,170 @@ export default function LandingPage() {
               </Box>
             ))}
           </Grid>
+
+          {/* Features Section */}
+          <Box mt={32} textAlign="center" position="relative" zIndex={2}>
+            <Heading
+              fontSize={{ base: '3xl', md: '4xl' }}
+              mb={16}
+              color="#CCFF00"
+              textTransform="uppercase"
+              letterSpacing="wide"
+            >
+              Game Features
+            </Heading>
+            <Grid
+              templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }}
+              gap={8}
+              maxW="1200px"
+              mx="auto"
+            >
+              {[
+                {
+                  title: 'Unique NFT Collection',
+                  description: 'Collect and trade unique gorilla NFTs with different attributes and rarity levels.',
+                  icon: '🎨'
+                },
+                {
+                  title: 'Evolution System',
+                  description: 'Evolve your gorillas through multiple stages to increase their power and value.',
+                  icon: '⚡'
+                },
+                {
+                  title: 'Competitive Gameplay',
+                  description: 'Compete with other players on the leaderboard and earn rewards.',
+                  icon: '🏆'
+                }
+              ].map((feature) => (
+                <Box
+                  key={feature.title}
+                  bg="rgba(0,0,0,0.5)"
+                  p={8}
+                  rounded="xl"
+                  border="1px solid"
+                  borderColor="rgba(204, 255, 0, 0.2)"
+                  _hover={{
+                    transform: 'translateY(-8px)',
+                    borderColor: 'rgba(204, 255, 0, 0.4)',
+                    boxShadow: '0 0 30px rgba(204, 255, 0, 0.1)'
+                  }}
+                  transition="all 0.3s"
+                >
+                  <Text fontSize="4xl" mb={4}>{feature.icon}</Text>
+                  <Heading
+                    fontSize="xl"
+                    color="#CCFF00"
+                    mb={4}
+                  >
+                    {feature.title}
+                  </Heading>
+                  <Text color="gray.300">
+                    {feature.description}
+                  </Text>
+                </Box>
+              ))}
+            </Grid>
+          </Box>
+
+          {/* Roadmap Section */}
+          <Box mt={32} position="relative" zIndex={2}>
+            <Heading
+              fontSize={{ base: '3xl', md: '4xl' }}
+              mb={16}
+              color="#CCFF00"
+              textTransform="uppercase"
+              letterSpacing="wide"
+              textAlign="center"
+            >
+              Roadmap
+            </Heading>
+            <Grid
+              templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }}
+              gap={8}
+              maxW="1200px"
+              mx="auto"
+            >
+              {[
+                {
+                  phase: 'Phase 1',
+                  title: 'Launch',
+                  items: ['Initial NFT Collection', 'Marketplace Integration', 'Community Building']
+                },
+                {
+                  phase: 'Phase 2',
+                  title: 'Evolution',
+                  items: ['Evolution Mechanics', 'Attribute System', 'Rarity Tiers']
+                },
+                {
+                  phase: 'Phase 3',
+                  title: 'Gameplay',
+                  items: ['PvP Battles', 'Leaderboard System', 'Reward Distribution']
+                },
+                {
+                  phase: 'Phase 4',
+                  title: 'Expansion',
+                  items: ['New NFT Collections', 'Cross-Chain Integration', 'Mobile App']
+                }
+              ].map((phase, index) => (
+                <Box
+                  key={phase.phase}
+                  bg="rgba(0,0,0,0.5)"
+                  p={6}
+                  rounded="xl"
+                  border="1px solid"
+                  borderColor="rgba(204, 255, 0, 0.2)"
+                  position="relative"
+                  _hover={{
+                    borderColor: 'rgba(204, 255, 0, 0.4)',
+                    transform: 'translateY(-8px)',
+                    boxShadow: '0 0 30px rgba(204, 255, 0, 0.1)'
+                  }}
+                  transition="all 0.3s"
+                >
+                  <Box
+                    position="absolute"
+                    top="-12px"
+                    left="50%"
+                    transform="translateX(-50%)"
+                    bg="#CCFF00"
+                    color="black"
+                    px={4}
+                    py={1}
+                    rounded="full"
+                    fontSize="sm"
+                    fontWeight="bold"
+                  >
+                    {phase.phase}
+                  </Box>
+                  <Heading
+                    fontSize="xl"
+                    color="white"
+                    mb={4}
+                    mt={4}
+                    textAlign="center"
+                  >
+                    {phase.title}
+                  </Heading>
+                  <VStack spacing={2} align="stretch">
+                    {phase.items.map((item) => (
+                      <HStack key={item} spacing={2}>
+                        <Box
+                          w="6px"
+                          h="6px"
+                          rounded="full"
+                          bg="#CCFF00"
+                          flexShrink={0}
+                        />
+                        <Text color="gray.300" fontSize="sm">
+                          {item}
+                        </Text>
+                      </HStack>
+                    ))}
+                  </VStack>
+                </Box>
+              ))}
+            </Grid>
+          </Box>
         </Container>
       </Box>
     </Box>
