@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
-import { Box, Container, Flex, Text, VStack, HStack, Badge, Tooltip, useColorModeValue } from '@chakra-ui/react';
+import { Box, Container, Flex, Text, VStack, HStack, Badge, Tooltip, useColorModeValue, useToast } from '@chakra-ui/react';
 import { Coins, Trophy, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import GorillaCard from './GorillaCard';
 
 const CRYPTO_GORILLA_ADDRESS = "YOUR_CONTRACT_ADDRESS_HERE";
@@ -34,6 +35,8 @@ const RARITY_SCORES = { common: 1, rare: 2, epic: 3, legendary: 4 };
 
 const CryptoGorillaGame: React.FC = () => {
   const { account, signAndSubmitTransaction } = useWallet();
+  const toast = useToast();
+  const [transactionStatus, setTransactionStatus] = useState<'pending' | 'success' | 'error' | null>(null);
   const [tribe, setTribe] = useState<Array<Gorilla | null>>([
     {
       id: 'pre-minted-gorilla-1',
@@ -144,7 +147,70 @@ const CryptoGorillaGame: React.FC = () => {
     setTribeScore(Math.round(finalScore));
   };
 
+  // Transaction feedback component
+  const TransactionFeedback = ({ status }: { status: 'pending' | 'success' | 'error' | null }) => {
+    if (!status) return null;
+
+    const config = {
+      pending: {
+        color: 'yellow.400',
+        icon: '⏳',
+        text: 'Transaction in progress...'
+      },
+      success: {
+        color: 'green.400',
+        icon: '✅',
+        text: 'Transaction successful!'
+      },
+      error: {
+        color: 'red.400',
+        icon: '❌',
+        text: 'Transaction failed'
+      }
+    };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+      >
+        <Box
+          position="fixed"
+          bottom="4"
+          right="4"
+          bg="gray.800"
+          color="white"
+          px="4"
+          py="2"
+          borderRadius="lg"
+          boxShadow="lg"
+          zIndex={1000}
+        >
+          <HStack spacing={3}>
+            <Text fontSize="xl">{config[status].icon}</Text>
+            <Text color={config[status].color}>{config[status].text}</Text>
+          </HStack>
+        </Box>
+      </motion.div>
+    );
+  };
+
+  const showTransactionToast = (type: 'pending' | 'success' | 'error', message: string) => {
+    toast({
+      title: type === 'pending' ? 'Transaction Pending' : type === 'success' ? 'Success!' : 'Error!',
+      description: message,
+      status: type === 'pending' ? 'info' : type === 'success' ? 'success' : 'error',
+      duration: type === 'pending' ? null : 5000,
+      isClosable: true,
+      position: 'bottom-right',
+    });
+  };
+
   const mintGorilla = async (index: number) => {
+    setTransactionStatus('pending');
+    showTransactionToast('pending', 'Minting your new gorilla...');
+    
     try {
       const rarities = ['common', 'common', 'rare', 'rare', 'epic', 'legendary'];
       const newGorilla: Gorilla = {
@@ -166,16 +232,22 @@ const CryptoGorillaGame: React.FC = () => {
         return newTribe;
       });
 
-      // For testing purposes, we'll add Banana Tokens when minting
       setBananaTokens(prev => prev + 10);
-      alert("Gorilla Minted Successfully! You received 10 Banana Tokens.");
+      setTransactionStatus('success');
+      showTransactionToast('success', `Successfully minted a ${newGorilla.rarity} gorilla! You received 10 Banana Tokens.`);
     } catch (error) {
       console.error("Error minting gorilla:", error);
-      alert("Failed to mint gorilla. Please try again.");
+      setTransactionStatus('error');
+      showTransactionToast('error', 'Failed to mint gorilla. Please try again.');
+    } finally {
+      setTimeout(() => setTransactionStatus(null), 3000);
     }
   };
 
   const evolveGorilla = async (gorillaId: string) => {
+    setTransactionStatus('pending');
+    showTransactionToast('pending', 'Evolving your gorilla...');
+    
     try {
       setTribe(prevTribe => prevTribe.map(gorilla => {
         if (gorilla && gorilla.id === gorillaId && gorilla.stage < 3) {
@@ -195,23 +267,35 @@ const CryptoGorillaGame: React.FC = () => {
         return gorilla;
       }));
 
-      alert("Gorilla Evolved Successfully!");
+      setTransactionStatus('success');
+      showTransactionToast('success', 'Your gorilla has evolved successfully!');
     } catch (error) {
       console.error("Error evolving gorilla:", error);
-      alert("Failed to evolve gorilla. Please try again.");
+      setTransactionStatus('error');
+      showTransactionToast('error', 'Failed to evolve gorilla. Please try again.');
+    } finally {
+      setTimeout(() => setTransactionStatus(null), 3000);
     }
   };
 
   const burnGorilla = async (gorillaId: string) => {
+    setTransactionStatus('pending');
+    showTransactionToast('pending', 'Burning your gorilla...');
+    
     try {
       setTribe(prevTribe => prevTribe.map(gorilla => 
         gorilla && gorilla.id === gorillaId ? null : gorilla
       ));
       setBananaTokens(prev => prev + 50);
-      alert("Gorilla burned successfully. You received 50 Banana Tokens.");
+      
+      setTransactionStatus('success');
+      showTransactionToast('success', 'Gorilla burned successfully. You received 50 Banana Tokens.');
     } catch (error) {
       console.error("Error burning gorilla:", error);
-      alert("Failed to burn gorilla. Please try again.");
+      setTransactionStatus('error');
+      showTransactionToast('error', 'Failed to burn gorilla. Please try again.');
+    } finally {
+      setTimeout(() => setTransactionStatus(null), 3000);
     }
   };
 
@@ -349,6 +433,9 @@ const CryptoGorillaGame: React.FC = () => {
           </Box>
         </VStack>
       </Container>
+      <AnimatePresence>
+        <TransactionFeedback status={transactionStatus} />
+      </AnimatePresence>
     </Box>
   );
 };
