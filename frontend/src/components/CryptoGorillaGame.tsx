@@ -455,6 +455,8 @@ const TransactionFeedback = ({ status }: { status: 'pending' | 'success' | 'erro
   );
 };
 
+const TRANSACTION_STATUS_TIMEOUT = 2000; // Consistent timeout duration
+
 const CryptoGorillaGame: React.FC = () => {
   const { account, signAndSubmitTransaction } = useWallet();
   const toast = useToast();
@@ -566,20 +568,28 @@ const CryptoGorillaGame: React.FC = () => {
   };
 
   const showTransactionToast = (type: 'pending' | 'success' | 'error', message: string) => {
+    // Close any existing pending toast
+    if (type === 'success' || type === 'error') {
+      toast.closeAll();
+    }
+
     toast({
+      id: 'transaction-toast', // Use a consistent ID to prevent multiple toasts
       title: type === 'pending' ? 'Transaction Pending' : type === 'success' ? 'Success!' : 'Error!',
       description: message,
       status: type === 'pending' ? 'info' : type === 'success' ? 'success' : 'error',
-      duration: type === 'pending' ? null : 5000,
+      duration: type === 'pending' ? 3000 : 2000, // Shorter durations
       isClosable: true,
       position: 'bottom-right',
       variant: 'solid',
-      backgroundColor: type === 'pending' ? 'yellow.400' : type === 'success' ? 'green.400' : 'red.400',
+      bg: type === 'pending' ? 'yellow.400' : type === 'success' ? 'green.400' : 'red.400',
       color: 'white',
     });
   };
 
   const mintGorilla = async (index: number) => {
+    // Clear any existing status first
+    setTransactionStatus(null);
     setTransactionStatus('pending');
     showTransactionToast('pending', 'Minting your new gorilla...');
     
@@ -612,14 +622,16 @@ const CryptoGorillaGame: React.FC = () => {
       setTransactionStatus('error');
       showTransactionToast('error', 'Failed to mint gorilla. Please try again.');
     } finally {
-      setTimeout(() => setTransactionStatus(null), 3000);
+      setTimeout(() => setTransactionStatus(null), TRANSACTION_STATUS_TIMEOUT);
     }
   };
 
   const evolveGorilla = async (gorillaId: string) => {
+    // Clear any existing status first
+    setTransactionStatus(null);
     setTransactionStatus('pending');
     showTransactionToast('pending', 'Evolving your gorilla...');
-    
+
     try {
       setTribe(prevTribe => prevTribe.map(gorilla => {
         if (gorilla && gorilla.id === gorillaId && gorilla.stage < 3) {
@@ -649,14 +661,16 @@ const CryptoGorillaGame: React.FC = () => {
       setTransactionStatus('error');
       showTransactionToast('error', 'Failed to evolve gorilla. Please try again.');
     } finally {
-      setTimeout(() => setTransactionStatus(null), 3000);
+      setTimeout(() => setTransactionStatus(null), TRANSACTION_STATUS_TIMEOUT);
     }
   };
 
   const burnGorilla = async (gorillaId: string) => {
+    // Clear any existing status first
+    setTransactionStatus(null);
     setTransactionStatus('pending');
     showTransactionToast('pending', 'Burning your gorilla...');
-    
+
     try {
       setTribe(prevTribe => prevTribe.map(gorilla => 
         gorilla && gorilla.id === gorillaId ? null : gorilla
@@ -670,7 +684,7 @@ const CryptoGorillaGame: React.FC = () => {
       setTransactionStatus('error');
       showTransactionToast('error', 'Failed to burn gorilla. Please try again.');
     } finally {
-      setTimeout(() => setTransactionStatus(null), 3000);
+      setTimeout(() => setTransactionStatus(null), TRANSACTION_STATUS_TIMEOUT);
     }
   };
 
@@ -803,8 +817,8 @@ const CryptoGorillaGame: React.FC = () => {
                       <GorillaCard 
                         gorilla={gorilla}
                         onMint={() => mintGorilla(index)}
-                        onEvolve={evolveGorilla}
-                        onBurn={burnGorilla}
+                        onEvolve={() => gorilla && evolveGorilla(gorilla.id)}
+                        onBurn={() => gorilla && burnGorilla(gorilla.id)}
                         score={gorilla ? calculateGorillaScore(gorilla) : 0}
                         isRecommendedBurn={gorilla === getRecommendedBurn()}
                       />
