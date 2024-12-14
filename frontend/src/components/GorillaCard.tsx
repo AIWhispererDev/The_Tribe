@@ -77,6 +77,49 @@ const StatBar = ({ label, value, max = 10 }: { label: string; value: number; max
   </Box>
 );
 
+const StageProgress = ({ stage }: { stage: number }) => {
+  const stages = ['Baby', 'Juvenile', 'Adult', 'Silverback'];
+  return (
+    <VStack w="full" spacing={2}>
+      <Progress 
+        value={(stage / 3) * 100}
+        colorScheme="purple"
+        size="sm"
+        borderRadius="full"
+        sx={{
+          '& > div': {
+            transition: 'all 0.8s ease-in-out'
+          }
+        }}
+      />
+      <HStack justify="space-between" w="full">
+        {stages.map((s, i) => (
+          <Box
+            key={s}
+            w="2"
+            h="2"
+            borderRadius="full"
+            bg={i <= stage ? 'purple.400' : 'whiteAlpha.200'}
+            transition="all 0.3s"
+          />
+        ))}
+      </HStack>
+      <HStack justify="space-between" w="full">
+        {stages.map((s, i) => (
+          <Text
+            key={s}
+            fontSize="xs"
+            color={i <= stage ? 'purple.400' : 'whiteAlpha.400'}
+            transition="all 0.3s"
+          >
+            {s}
+          </Text>
+        ))}
+      </HStack>
+    </VStack>
+  );
+};
+
 export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, isRecommendedBurn }: GorillaCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -290,13 +333,15 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
                 />
               </Box>
 
+              <StageProgress stage={gorilla.stage} />
+
               <VStack spacing={0.5} align="flex-start" w="full">
                 <Text 
                   color="gray.400" 
                   fontSize="sm"
                   letterSpacing="wide"
                 >
-                  Stage {gorilla.stage + 1} • Score: {score.toFixed(1)}%
+                  Score: {score.toFixed(1)}%
                 </Text>
                 <Text 
                   color="white" 
