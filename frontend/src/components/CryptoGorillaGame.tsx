@@ -5,9 +5,9 @@ import { Box, Container, Heading, Text, VStack, HStack, Grid, keyframes, useToas
 import { Coins, Trophy, Star, Leaf, TreePine, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GorillaCard from './GorillaCard';
-import Particles from 'react-particles';
-import { loadFull } from 'tsparticles';
-import type { Engine } from 'tsparticles-engine';
+import { Particles } from "@tsparticles/react";
+import { loadSlim } from "@tsparticles/slim";
+import type { Engine } from "@tsparticles/engine";
 import { TribalContainer, TribalButton, TribalDivider } from './TribalComponents';
 
 const CRYPTO_GORILLA_ADDRESS = "YOUR_CONTRACT_ADDRESS_HERE";
@@ -94,16 +94,22 @@ const ConnectingLine = () => (
         width: '10px',
         height: '10px',
         borderRadius: 'full',
-        bg: 'purple.400',
+        background: 'linear-gradient(45deg, rgba(107, 75, 255, 0.8), rgba(107, 75, 255, 0.4))',
         left: 0,
         top: '50%',
         transform: 'translateY(-50%)',
+        boxShadow: '0 0 10px rgba(107, 75, 255, 0.3)',
+        zIndex: 0
       }
     }}
   />
 );
 
 const EvolutionCelebration = () => {
+  const particlesInit = useCallback(async (engine: Engine) => {
+    await loadSlim(engine);
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -213,6 +219,7 @@ const EvolutionCelebration = () => {
           {/* Nature Particles */}
           <Particles
             id="evolution-particles"
+            init={particlesInit}
             options={{
               particles: {
                 number: { value: 100 },
@@ -260,7 +267,7 @@ const EvolutionCelebration = () => {
 
 const ParallaxBackground = ({ children }: { children: React.ReactNode }) => {
   const particlesInit = useCallback(async (engine: Engine) => {
-    await loadFull(engine);
+    await loadSlim(engine);
   }, []);
 
   return (
@@ -475,7 +482,7 @@ const CryptoGorillaGame: React.FC = () => {
   const [showEvolution, setShowEvolution] = useState(false);
 
   const particlesInit = useCallback(async (engine: Engine) => {
-    await loadFull(engine);
+    await loadSlim(engine);
   }, []);
 
   const fetchTribeData = async () => {
@@ -567,7 +574,7 @@ const CryptoGorillaGame: React.FC = () => {
       isClosable: true,
       position: 'bottom-right',
       variant: 'solid',
-      bg: type === 'pending' ? 'yellow.400' : type === 'success' ? 'green.400' : 'red.400',
+      backgroundColor: type === 'pending' ? 'yellow.400' : type === 'success' ? 'green.400' : 'red.400',
       color: 'white',
     });
   };
@@ -778,15 +785,30 @@ const CryptoGorillaGame: React.FC = () => {
                   {index < tribe.length - 1 && (
                     <ConnectingLine />
                   )}
-                  <Box position="relative" zIndex={1}>
-                    <GorillaCard 
-                      gorilla={gorilla}
-                      onMint={() => mintGorilla(index)}
-                      onEvolve={evolveGorilla}
-                      onBurn={burnGorilla}
-                      score={gorilla ? calculateGorillaScore(gorilla) : 0}
-                      isRecommendedBurn={gorilla === getRecommendedBurn()}
-                    />
+                  <Box 
+                    position="relative" 
+                    zIndex={1}
+                    sx={{
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        inset: 0,
+                        background: '#0A0D11',
+                        borderRadius: 'xl',
+                        zIndex: 0
+                      }
+                    }}
+                  >
+                    <Box position="relative" zIndex={1}>
+                      <GorillaCard 
+                        gorilla={gorilla}
+                        onMint={() => mintGorilla(index)}
+                        onEvolve={evolveGorilla}
+                        onBurn={burnGorilla}
+                        score={gorilla ? calculateGorillaScore(gorilla) : 0}
+                        isRecommendedBurn={gorilla === getRecommendedBurn()}
+                      />
+                    </Box>
                   </Box>
                 </Box>
               ))}
