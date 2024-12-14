@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Box, VStack, HStack, Text, Button, Progress } from '@chakra-ui/react';
-import { Repeat, Hexagon, Sparkles, Star } from 'lucide-react';
+import { Repeat, Hexagon, Sparkles, Star, Leaf } from 'lucide-react';
 
 interface GorillaCardProps {
   gorilla: {
@@ -60,67 +60,116 @@ const HolographicIcon = ({ icon: Icon }: { icon: React.ElementType }) => (
   </Box>
 );
 
-const StatBar = ({ label, value, max = 10 }: { label: string; value: number; max?: number }) => (
+const rarityEffects = {
+  legendary: {
+    borderGradient: 'linear-gradient(45deg, #FFD700, #FFA500)',
+    iconGlow: '0 0 15px #FFD700',
+    backgroundEffect: 'radial-gradient(circle at center, rgba(255, 215, 0, 0.15), transparent 70%)',
+    particleColor: '#FFD700',
+    accentColor: '#FFA500'
+  },
+  epic: {
+    borderGradient: 'linear-gradient(45deg, #9400D3, #4B0082)',
+    iconGlow: '0 0 15px #9400D3',
+    backgroundEffect: 'radial-gradient(circle at center, rgba(148, 0, 211, 0.15), transparent 70%)',
+    particleColor: '#9400D3',
+    accentColor: '#4B0082'
+  },
+  rare: {
+    borderGradient: 'linear-gradient(45deg, #0096FF, #00008B)',
+    iconGlow: '0 0 15px #0096FF',
+    backgroundEffect: 'radial-gradient(circle at center, rgba(0, 150, 255, 0.15), transparent 70%)',
+    particleColor: '#0096FF',
+    accentColor: '#00008B'
+  },
+  common: {
+    borderGradient: 'linear-gradient(45deg, #2A4C3B, #1A2F24)',
+    iconGlow: '0 0 15px #2A4C3B',
+    backgroundEffect: 'radial-gradient(circle at center, rgba(42, 76, 59, 0.15), transparent 70%)',
+    particleColor: '#2A4C3B',
+    accentColor: '#1A2F24'
+  }
+};
+
+const LeafParticles = ({ color }: { color: string }) => (
+  <Box
+    position="absolute"
+    inset={0}
+    overflow="hidden"
+    pointerEvents="none"
+  >
+    {[...Array(5)].map((_, i) => (
+      <motion.div
+        key={i}
+        style={{
+          position: 'absolute',
+          width: '20px',
+          height: '20px',
+          color: color,
+          opacity: 0.3,
+          x: Math.random() * 100 + '%',
+          y: Math.random() * 100 + '%'
+        }}
+        animate={{
+          y: ['0%', '100%'],
+          rotate: [0, 360],
+          opacity: [0.3, 0]
+        }}
+        transition={{
+          duration: 3 + Math.random() * 2,
+          repeat: Infinity,
+          delay: Math.random() * 2
+        }}
+      >
+        <Leaf size={20} />
+      </motion.div>
+    ))}
+  </Box>
+);
+
+const StatBar = ({ label, value, max = 10, color }: { label: string; value: number; max?: number; color: string }) => (
   <Box w="full">
     <HStack justify="space-between" mb={1}>
-      <Text fontSize="xs" color="gray.400">{label}</Text>
-      <Text fontSize="xs" color="gray.400">{value}/{max}</Text>
+      <Text fontSize="xs" color="gray.300">{label}</Text>
+      <Text fontSize="xs" color="gray.300">{value}/{max}</Text>
     </HStack>
     <Progress 
       value={value} 
       max={max} 
       size="sm" 
       borderRadius="full"
-      colorScheme="purple"
+      sx={{
+        '& > div': {
+          background: `linear-gradient(90deg, ${color}, ${color}88)`,
+        }
+      }}
       bg="whiteAlpha.200"
     />
   </Box>
 );
 
-const rarityEffects = {
-  legendary: {
-    borderGradient: 'linear-gradient(45deg, #FFD700, #FFA500)',
-    iconGlow: '0 0 15px #FFD700',
-    backgroundEffect: 'radial-gradient(circle at center, rgba(255, 215, 0, 0.15), transparent 70%)'
-  },
-  epic: {
-    borderGradient: 'linear-gradient(45deg, #9400D3, #4B0082)',
-    iconGlow: '0 0 15px #9400D3',
-    backgroundEffect: 'radial-gradient(circle at center, rgba(148, 0, 211, 0.15), transparent 70%)'
-  },
-  rare: {
-    borderGradient: 'linear-gradient(45deg, #0096FF, #00008B)',
-    iconGlow: '0 0 15px #0096FF',
-    backgroundEffect: 'radial-gradient(circle at center, rgba(0, 150, 255, 0.15), transparent 70%)'
-  },
-  common: {
-    borderGradient: 'linear-gradient(45deg, #808080, #404040)',
-    iconGlow: '0 0 15px #808080',
-    backgroundEffect: 'radial-gradient(circle at center, rgba(128, 128, 128, 0.15), transparent 70%)'
-  }
-};
-
-const StageProgress = ({ stage }: { stage: number }) => {
+const StageProgress = ({ stage, color }: { stage: number; color: string }) => {
   const stages = ['Baby', 'Juvenile', 'Adult', 'Silverback'];
   return (
     <VStack w="full" spacing={2}>
       <Progress 
         value={(stage / 3) * 100}
-        colorScheme="purple"
         size="sm"
         borderRadius="full"
         sx={{
           '& > div': {
+            background: `linear-gradient(90deg, ${color}, ${color}88)`,
             transition: 'all 0.8s ease-in-out'
           }
         }}
+        bg="whiteAlpha.200"
       />
       <HStack justify="space-between" w="full">
         {stages.map((s, i) => (
           <Text
             key={s}
             fontSize="xs"
-            color={i <= stage ? 'purple.400' : 'whiteAlpha.400'}
+            color={i <= stage ? color : 'whiteAlpha.400'}
             transition="all 0.3s"
           >
             {s}
@@ -133,6 +182,7 @@ const StageProgress = ({ stage }: { stage: number }) => {
 
 export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, isRecommendedBurn }: GorillaCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleClick = () => {
     if (gorilla) {
@@ -147,8 +197,10 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
 
   if (!gorilla) {
     return (
-      <MotionBox
-        whileHover={{ scale: 1.05, rotateY: 5 }}
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        onHoverStart={() => setIsHovered(true)}
+        onHoverEnd={() => setIsHovered(false)}
         transition={{ duration: 0.3 }}
         style={{ perspective: '1000px' }}
       >
@@ -157,20 +209,15 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
           borderRadius="xl"
           overflow="hidden"
           sx={{
-            background: 'linear-gradient(165deg, rgba(107, 75, 255, 0.2), rgba(107, 75, 255, 0.05))',
+            background: 'linear-gradient(165deg, rgba(42, 76, 59, 0.2), rgba(26, 47, 36, 0.05))',
             backdropFilter: 'blur(10px)',
             border: '1px solid',
-            borderColor: 'rgba(107, 75, 255, 0.3)',
-            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-            _before: {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'linear-gradient(45deg, rgba(107, 75, 255, 0.1), rgba(107, 75, 255, 0))',
-              zIndex: 0,
+            borderColor: 'rgba(42, 76, 59, 0.3)',
+            boxShadow: '0 8px 32px 0 rgba(26, 47, 36, 0.37)',
+            transition: 'all 0.3s ease-in-out',
+            _hover: {
+              boxShadow: '0 8px 32px 0 rgba(42, 76, 59, 0.5)',
+              borderColor: 'rgba(42, 76, 59, 0.5)',
             }
           }}
           p={4}
@@ -245,7 +292,7 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
             </VStack>
           </VStack>
         </Box>
-      </MotionBox>
+      </motion.div>
     );
   }
 
@@ -260,16 +307,20 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
       position="relative"
       sx={{ perspective: '1000px' }}
     >
-      <MotionBox
-        position="relative"
-        w="full"
-        h="full"
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ duration: 0.6 }}
+      <motion.div
         style={{ 
+          position: 'relative',
+          width: '100%',
+          height: '100%',
           transformStyle: 'preserve-3d',
-          transform: `rotateY(${isFlipped ? '180deg' : '0deg'})`,
         }}
+        animate={{ 
+          rotateY: isFlipped ? 180 : 0,
+          scale: isHovered ? 1.05 : 1
+        }}
+        onHoverStart={() => setIsHovered(true)}
+        onHoverEnd={() => setIsHovered(false)}
+        transition={{ duration: 0.6 }}
       >
         {/* Front of card */}
         <Box
@@ -294,20 +345,14 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
               borderImage: effect.borderGradient,
               borderImageSlice: 1,
               boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.37), ${effect.iconGlow}`,
-              _before: {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: effect.borderGradient,
-                opacity: 0.05,
-                zIndex: 0,
+              transition: 'all 0.3s ease-in-out',
+              _hover: {
+                boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.5), ${effect.iconGlow}`,
               }
             }}
             p={4}
           >
+            <LeafParticles color={effect.particleColor} />
             <VStack spacing={3} position="relative" zIndex={1}>
               <HStack spacing={2} alignSelf="flex-start">
                 <HolographicIcon icon={Repeat} />
@@ -348,7 +393,7 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
                 />
               </Box>
 
-              <StageProgress stage={gorilla.stage} />
+              <StageProgress stage={gorilla.stage} color={effect.accentColor} />
 
               <VStack spacing={0.5} align="flex-start" w="full">
                 <Text 
@@ -432,23 +477,25 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
             }}
             p={4}
           >
+            <LeafParticles color={effect.particleColor} />
             <VStack spacing={4} h="full">
               <Text 
                 color="white" 
                 fontWeight="bold"
                 fontSize="lg"
                 letterSpacing="wide"
+                textShadow={effect.iconGlow}
               >
                 {gorilla.name} Stats
               </Text>
 
               <VStack w="full" spacing={3}>
-                <StatBar label="Strength" value={gorilla.strength} />
-                <StatBar label="Intelligence" value={gorilla.intelligence} />
-                <StatBar label="Social Skills" value={gorilla.socialSkills} />
-                <StatBar label="Agility" value={gorilla.agility} />
-                <StatBar label="Endurance" value={gorilla.endurance} />
-                <StatBar label="Leadership" value={gorilla.leadership} />
+                <StatBar label="Strength" value={gorilla.strength} color={effect.accentColor} />
+                <StatBar label="Intelligence" value={gorilla.intelligence} color={effect.accentColor} />
+                <StatBar label="Social Skills" value={gorilla.socialSkills} color={effect.accentColor} />
+                <StatBar label="Agility" value={gorilla.agility} color={effect.accentColor} />
+                <StatBar label="Endurance" value={gorilla.endurance} color={effect.accentColor} />
+                <StatBar label="Leadership" value={gorilla.leadership} color={effect.accentColor} />
               </VStack>
 
               <Text 
@@ -462,7 +509,7 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
             </VStack>
           </Box>
         </Box>
-      </MotionBox>
+      </motion.div>
     </Box>
   );
 }

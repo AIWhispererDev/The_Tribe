@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
 import { Box, Container, Heading, Text, VStack, HStack, Button, Grid, keyframes, useToast, Icon } from '@chakra-ui/react';
 import { Coins, Trophy, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GorillaCard from './GorillaCard';
+import Particles from 'react-particles';
+import { loadFull } from 'tsparticles';
+import type { Engine } from 'tsparticles-engine';
 
 const CRYPTO_GORILLA_ADDRESS = "YOUR_CONTRACT_ADDRESS_HERE";
 const NODE_URL = "https://fullnode.testnet.aptoslabs.com";
@@ -43,6 +46,18 @@ const twinkleAnimation = keyframes`
   0% { opacity: 0.2; }
   50% { opacity: 0.8; }
   100% { opacity: 0.2; }
+`;
+
+const jungleGradient = keyframes`
+  0% { background-position: 0% 50% }
+  50% { background-position: 100% 50% }
+  100% { background-position: 0% 50% }
+`;
+
+const lightRay = keyframes`
+  0% { transform: rotate(0deg) translate(-50%, -50%) scale(1); opacity: 0.3; }
+  50% { transform: rotate(180deg) translate(-50%, -50%) scale(1.2); opacity: 0.5; }
+  100% { transform: rotate(360deg) translate(-50%, -50%) scale(1); opacity: 0.3; }
 `;
 
 const ConnectingLine = () => (
@@ -100,6 +115,131 @@ const EvolutionCelebration = () => {
         </VStack>
       </Box>
     </motion.div>
+  );
+};
+
+const ParallaxBackground = ({ children }: { children: React.ReactNode }) => {
+  const particlesInit = useCallback(async (engine: Engine) => {
+    await loadFull(engine);
+  }, []);
+
+  return (
+    <Box
+      position="relative"
+      minH="100vh"
+      overflow="hidden"
+      bg="#0A0D11"
+      _before={{
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        bgGradient: 'linear(to-b, rgba(42, 76, 59, 0.2), rgba(10, 13, 17, 0.8))',
+        animation: `${jungleGradient} 15s ease infinite`,
+        backgroundSize: '200% 200%',
+        zIndex: 0,
+      }}
+    >
+      {/* Vine Silhouettes */}
+      <Box
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        opacity={0.1}
+        backgroundImage="url('/vine-silhouettes.png')"
+        backgroundSize="cover"
+        backgroundPosition="center"
+        zIndex={1}
+      />
+
+      {/* Light Rays */}
+      <Box
+        position="absolute"
+        top="50%"
+        left="50%"
+        width="150%"
+        height="150%"
+        transform="translate(-50%, -50%)"
+        background="radial-gradient(ellipse at center, rgba(229, 255, 68, 0.1) 0%, transparent 70%)"
+        animation={`${lightRay} 20s linear infinite`}
+        zIndex={2}
+      />
+
+      {/* Particles/Fireflies */}
+      <Particles
+        id="jungle-particles"
+        init={particlesInit}
+        options={{
+          particles: {
+            number: { value: 50, density: { enable: true, value_area: 1000 } },
+            color: { value: "#E5FF44" },
+            opacity: {
+              value: 0.5,
+              random: true,
+              animation: {
+                enable: true,
+                speed: 1,
+                minimumValue: 0.1,
+                sync: false
+              }
+            },
+            size: {
+              value: 3,
+              random: true,
+              animation: {
+                enable: true,
+                speed: 2,
+                minimumValue: 0.5,
+                sync: false
+              }
+            },
+            move: {
+              enable: true,
+              speed: 1,
+              direction: "none",
+              random: true,
+              straight: false,
+              outModes: { default: "out" }
+            }
+          },
+          interactivity: {
+            detectsOn: "canvas",
+            events: {
+              onHover: { enable: true, mode: "repulse" },
+              resize: true
+            }
+          },
+          background: {
+            color: "transparent"
+          }
+        }}
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          zIndex: 3
+        }}
+      />
+
+      {/* Misty Overlay */}
+      <Box
+        position="absolute"
+        inset={0}
+        backdropFilter="blur(40px)"
+        zIndex={4}
+        pointerEvents="none"
+        background="linear-gradient(180deg, rgba(10, 13, 17, 0) 0%, rgba(10, 13, 17, 0.3) 100%)"
+      />
+
+      {/* Content Container */}
+      <Box position="relative" zIndex={5}>
+        {children}
+      </Box>
+    </Box>
   );
 };
 
@@ -398,57 +538,37 @@ const CryptoGorillaGame: React.FC = () => {
   };
 
   return (
-    <Box 
-      minH="100vh" 
-      bg="black" 
-      position="relative"
-      overflow="hidden"
-      sx={{
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'radial-gradient(circle at center, rgba(107, 75, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%)',
-          pointerEvents: 'none',
-        }
-      }}
-      py={12}
-    >
-      {/* Animated stars background */}
-      {[...Array(50)].map((_, i) => (
-        <Box
-          key={i}
-          position="absolute"
-          width="2px"
-          height="2px"
-          bg="white"
-          borderRadius="full"
-          top={`${Math.random() * 100}%`}
-          left={`${Math.random() * 100}%`}
-          animation={`${twinkleAnimation} ${2 + Math.random() * 3}s infinite`}
-          opacity={0.2}
-        />
-      ))}
-
+    <ParallaxBackground>
       <Container maxW="container.xl">
         <VStack spacing={12} align="center">
           <Box
+            position="relative"
             animation={`${floatAnimation} 6s ease-in-out infinite`}
+            _before={{
+              content: '""',
+              position: "absolute",
+              top: "-20px",
+              left: "-20px",
+              right: "-20px",
+              bottom: "-20px",
+              background: "linear-gradient(45deg, rgba(229, 255, 68, 0.1), rgba(107, 75, 255, 0.1))",
+              borderRadius: "xl",
+              filter: "blur(20px)",
+              zIndex: -1,
+            }}
           >
             <Heading 
               color="white" 
               fontSize={{ base: "4xl", md: "5xl", lg: "6xl" }}
               textAlign="center"
               mb={4}
-              bgGradient="linear(to-r, white, purple.400)"
+              bgGradient="linear(to-r, #E5FF44, #6B4BFF)"
               bgClip="text"
               letterSpacing="tight"
+              textShadow="0 0 20px rgba(229, 255, 68, 0.3)"
             >
               Build your ultimate{' '}
-              <Text as="span" color="gray.400">
+              <Text as="span" color="#2A4C3B">
                 gorilla tribe
               </Text>
             </Heading>
@@ -539,7 +659,7 @@ const CryptoGorillaGame: React.FC = () => {
         {showEvolution && <EvolutionCelebration />}
         <TransactionFeedback status={transactionStatus} />
       </AnimatePresence>
-    </Box>
+    </ParallaxBackground>
   );
 };
 
