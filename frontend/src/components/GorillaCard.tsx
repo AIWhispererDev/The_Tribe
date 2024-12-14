@@ -40,7 +40,7 @@ const HolographicIcon = ({ icon: Icon }: { icon: React.ElementType }) => (
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'linear-gradient(45deg, #4158D0, #C850C0, #4158D0)',
+        background: 'linear-gradient(45deg, #E5FF44, #6B4BFF, #E5FF44)',
         backgroundSize: '200% 200%',
         animation: 'gradient 3s ease infinite',
         opacity: 0.8,
@@ -66,28 +66,36 @@ const rarityEffects = {
     iconGlow: '0 0 15px #FFD700',
     backgroundEffect: 'radial-gradient(circle at center, rgba(255, 215, 0, 0.15), transparent 70%)',
     particleColor: '#FFD700',
-    accentColor: '#FFA500'
+    accentColor: '#FFA500',
+    buttonGradient: 'linear-gradient(45deg, #FFD700, #FFA500)',
+    buttonHoverGradient: 'linear-gradient(45deg, #FFA500, #FFD700)'
   },
   epic: {
     borderGradient: 'linear-gradient(45deg, #9400D3, #4B0082)',
     iconGlow: '0 0 15px #9400D3',
     backgroundEffect: 'radial-gradient(circle at center, rgba(148, 0, 211, 0.15), transparent 70%)',
     particleColor: '#9400D3',
-    accentColor: '#4B0082'
+    accentColor: '#4B0082',
+    buttonGradient: 'linear-gradient(45deg, #9400D3, #4B0082)',
+    buttonHoverGradient: 'linear-gradient(45deg, #4B0082, #9400D3)'
   },
   rare: {
     borderGradient: 'linear-gradient(45deg, #0096FF, #00008B)',
     iconGlow: '0 0 15px #0096FF',
     backgroundEffect: 'radial-gradient(circle at center, rgba(0, 150, 255, 0.15), transparent 70%)',
     particleColor: '#0096FF',
-    accentColor: '#00008B'
+    accentColor: '#00008B',
+    buttonGradient: 'linear-gradient(45deg, #0096FF, #00008B)',
+    buttonHoverGradient: 'linear-gradient(45deg, #00008B, #0096FF)'
   },
   common: {
     borderGradient: 'linear-gradient(45deg, #2A4C3B, #1A2F24)',
     iconGlow: '0 0 15px #2A4C3B',
     backgroundEffect: 'radial-gradient(circle at center, rgba(42, 76, 59, 0.15), transparent 70%)',
     particleColor: '#2A4C3B',
-    accentColor: '#1A2F24'
+    accentColor: '#1A2F24',
+    buttonGradient: 'linear-gradient(45deg, #2A4C3B, #1A2F24)',
+    buttonHoverGradient: 'linear-gradient(45deg, #1A2F24, #2A4C3B)'
   }
 };
 
@@ -141,6 +149,9 @@ const StatBar = ({ label, value, max = 10, color }: { label: string; value: numb
       sx={{
         '& > div': {
           background: `linear-gradient(90deg, ${color}, ${color}88)`,
+          _hover: {
+            background: `linear-gradient(90deg, ${color}88, ${color})`
+          }
         }
       }}
       bg="whiteAlpha.200"
@@ -216,8 +227,19 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
             boxShadow: '0 8px 32px 0 rgba(26, 47, 36, 0.37)',
             transition: 'all 0.3s ease-in-out',
             _hover: {
-              boxShadow: '0 8px 32px 0 rgba(42, 76, 59, 0.5)',
+              boxShadow: '0 8px 32px 0 rgba(26, 47, 36, 0.5)',
               borderColor: 'rgba(42, 76, 59, 0.5)',
+              '&::before': {
+                opacity: 0.7,
+              }
+            },
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(45deg, rgba(229, 255, 68, 0.1), rgba(107, 75, 255, 0.1))',
+              opacity: 0.3,
+              transition: 'opacity 0.3s ease',
             }
           }}
           p={4}
@@ -256,9 +278,32 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
               <Button
                 onClick={onMint}
                 variant="outline"
-                borderColor="purple.400"
+                borderColor="#E5FF44"
                 color="white"
-                _hover={{ bg: 'whiteAlpha.200' }}
+                position="relative"
+                overflow="hidden"
+                _hover={{
+                  borderColor: '#6B4BFF',
+                  '&::before': {
+                    transform: 'translateX(100%)',
+                  }
+                }}
+                _active={{
+                  transform: 'scale(0.95)',
+                }}
+                sx={{
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(229, 255, 68, 0.2), transparent)',
+                    transform: 'translateX(-100%)',
+                    transition: 'transform 0.5s ease',
+                  }
+                }}
                 zIndex={2}
               >
                 Mint Gorilla
@@ -282,7 +327,7 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
                 Available
               </Text>
               <Text 
-                bgGradient="linear(to-r, purple.400, blue.400)"
+                bgGradient="linear(to-r, #E5FF44, #6B4BFF)"
                 bgClip="text"
                 fontSize="sm"
                 fontWeight="medium"
@@ -297,6 +342,83 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
   }
 
   const effect = rarityEffects[gorilla.rarity];
+
+  const CardContainer = ({ children, isBack = false }: { children: React.ReactNode, isBack?: boolean }) => (
+    <Box
+      position="relative"
+      borderRadius="xl"
+      overflow="hidden"
+      h="full"
+      sx={{
+        background: effect.backgroundEffect,
+        backdropFilter: 'blur(10px)',
+        border: '1px solid',
+        borderImage: effect.borderGradient,
+        borderImageSlice: 1,
+        boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.37), ${effect.iconGlow}`,
+        transition: 'all 0.3s ease-in-out',
+        _hover: {
+          boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.5), ${effect.iconGlow}`,
+          '&::before': {
+            opacity: 0.7,
+          }
+        },
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          background: effect.borderGradient,
+          opacity: 0.3,
+          transition: 'opacity 0.3s ease',
+        }
+      }}
+      p={4}
+    >
+      {children}
+    </Box>
+  );
+
+  const ActionButton = ({ onClick, color, hoverColor, children }: { 
+    onClick: (e: React.MouseEvent) => void, 
+    color: string, 
+    hoverColor: string,
+    children: React.ReactNode 
+  }) => (
+    <Button
+      onClick={onClick}
+      flex={1}
+      variant="outline"
+      borderColor={color}
+      color="white"
+      position="relative"
+      overflow="hidden"
+      _hover={{
+        borderColor: hoverColor,
+        '&::before': {
+          transform: 'translateX(100%)',
+        }
+      }}
+      _active={{
+        transform: 'scale(0.95)',
+      }}
+      sx={{
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: `linear-gradient(90deg, transparent, ${color}33, transparent)`,
+          transform: 'translateX(-100%)',
+          transition: 'transform 0.5s ease',
+        }
+      }}
+      size="sm"
+    >
+      {children}
+    </Button>
+  );
 
   return (
     <Box
@@ -333,25 +455,7 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
             transform: 'rotateY(0deg)',
           }}
         >
-          <Box
-            position="relative"
-            borderRadius="xl"
-            overflow="hidden"
-            h="full"
-            sx={{
-              background: effect.backgroundEffect,
-              backdropFilter: 'blur(10px)',
-              border: '1px solid',
-              borderImage: effect.borderGradient,
-              borderImageSlice: 1,
-              boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.37), ${effect.iconGlow}`,
-              transition: 'all 0.3s ease-in-out',
-              _hover: {
-                boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.5), ${effect.iconGlow}`,
-              }
-            }}
-            p={4}
-          >
+          <CardContainer>
             <LeafParticles color={effect.particleColor} />
             <VStack spacing={3} position="relative" zIndex={1}>
               <HStack spacing={2} alignSelf="flex-start">
@@ -412,7 +516,7 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
                   {gorilla.name}
                 </Text>
                 <Text 
-                  bgGradient="linear(to-r, purple.400, blue.400)"
+                  bgGradient="linear(to-r, #E5FF44, #6B4BFF)"
                   bgClip="text"
                   fontSize="sm"
                   fontWeight="medium"
@@ -423,32 +527,24 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
 
               <HStack spacing={2} w="full">
                 {gorilla.stage < 3 && (
-                  <Button
+                  <ActionButton
                     onClick={(e) => handleButtonClick(e, () => onEvolve(gorilla.id))}
-                    flex={1}
-                    variant="outline"
-                    borderColor="purple.400"
-                    color="white"
-                    _hover={{ bg: 'whiteAlpha.200' }}
-                    size="sm"
+                    color="#E5FF44"
+                    hoverColor="#6B4BFF"
                   >
                     Evolve
-                  </Button>
+                  </ActionButton>
                 )}
-                <Button
+                <ActionButton
                   onClick={(e) => handleButtonClick(e, () => onBurn(gorilla.id))}
-                  flex={1}
-                  variant="outline"
-                  borderColor="red.400"
-                  color="white"
-                  _hover={{ bg: 'whiteAlpha.200' }}
-                  size="sm"
+                  color="#FF4444"
+                  hoverColor="#FF0000"
                 >
                   Burn
-                </Button>
+                </ActionButton>
               </HStack>
             </VStack>
-          </Box>
+          </CardContainer>
         </Box>
 
         {/* Back of card */}
@@ -462,21 +558,7 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
             transform: 'rotateY(180deg)',
           }}
         >
-          <Box
-            position="relative"
-            borderRadius="xl"
-            overflow="hidden"
-            h="full"
-            sx={{
-              background: effect.backgroundEffect,
-              backdropFilter: 'blur(10px)',
-              border: '1px solid',
-              borderImage: effect.borderGradient,
-              borderImageSlice: 1,
-              boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.37), ${effect.iconGlow}`,
-            }}
-            p={4}
-          >
+          <CardContainer isBack>
             <LeafParticles color={effect.particleColor} />
             <VStack spacing={4} h="full">
               <Text 
@@ -507,7 +589,7 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
                 Click to see front →
               </Text>
             </VStack>
-          </Box>
+          </CardContainer>
         </Box>
       </motion.div>
     </Box>

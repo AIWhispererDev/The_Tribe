@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
-import { Box, Container, Heading, Text, VStack, HStack, Button, Grid, keyframes, useToast, Icon } from '@chakra-ui/react';
-import { Coins, Trophy, Star } from 'lucide-react';
+import { Box, Container, Heading, Text, VStack, HStack, Grid, keyframes, useToast, Icon } from '@chakra-ui/react';
+import { Coins, Trophy, Star, Leaf, TreePine, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GorillaCard from './GorillaCard';
 import Particles from 'react-particles';
 import { loadFull } from 'tsparticles';
 import type { Engine } from 'tsparticles-engine';
+import { TribalContainer, TribalButton, TribalDivider } from './TribalComponents';
 
 const CRYPTO_GORILLA_ADDRESS = "YOUR_CONTRACT_ADDRESS_HERE";
 const NODE_URL = "https://fullnode.testnet.aptoslabs.com";
@@ -32,9 +33,14 @@ const PERFECT_TRIBE = {
   totalStats: 150,
   stageDistribution: [1, 1, 2, 1],
   rarityDistribution: { common: 2, rare: 1, epic: 1, legendary: 1 },
-};
+} as const;
 
-const RARITY_SCORES = { common: 1, rare: 2, epic: 3, legendary: 4 };
+const RARITY_SCORES: Record<Gorilla['rarity'], number> = {
+  common: 1,
+  rare: 2,
+  epic: 3,
+  legendary: 4,
+};
 
 const floatAnimation = keyframes`
   0% { transform: translateY(0px); }
@@ -58,6 +64,17 @@ const lightRay = keyframes`
   0% { transform: rotate(0deg) translate(-50%, -50%) scale(1); opacity: 0.3; }
   50% { transform: rotate(180deg) translate(-50%, -50%) scale(1.2); opacity: 0.5; }
   100% { transform: rotate(360deg) translate(-50%, -50%) scale(1); opacity: 0.3; }
+`;
+
+const drumBeat = keyframes`
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+`;
+
+const tribalPattern = keyframes`
+  0% { transform: translateX(-100%) rotate(0deg); opacity: 0; }
+  100% { transform: translateX(100%) rotate(360deg); opacity: 0.3; }
 `;
 
 const ConnectingLine = () => (
@@ -89,29 +106,152 @@ const ConnectingLine = () => (
 const EvolutionCelebration = () => {
   return (
     <motion.div
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{ 
-        scale: [1, 1.2, 1],
-        opacity: [0, 1, 0]
-      }}
-      transition={{ duration: 1.5 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
     >
       <Box
-        position="absolute"
+        position="fixed"
         inset={0}
-        bgGradient="radial(circle at center, purple.500 0%, transparent 70%)"
-        zIndex={10}
+        zIndex={50}
+        overflow="hidden"
+        bg="rgba(10, 13, 17, 0.9)"
       >
-        <VStack spacing={4} justify="center" h="full">
-          <Icon as={Star} w={20} h={20} color="yellow.400" />
-          <Text
-            fontSize="2xl"
-            fontWeight="bold"
-            bgGradient="linear(to-r, yellow.400, purple.400)"
-            bgClip="text"
+        {/* Tribal Patterns */}
+        {[...Array(5)].map((_, i) => (
+          <Box
+            key={i}
+            position="absolute"
+            top={`${20 * i}%`}
+            left={0}
+            width="100%"
+            height="20px"
+            opacity={0}
+            background="url('/tribal-pattern.png')"
+            backgroundSize="contain"
+            animation={`${tribalPattern} ${3 + i * 0.5}s infinite linear`}
+          />
+        ))}
+
+        {/* Central Animation */}
+        <VStack
+          spacing={8}
+          justify="center"
+          align="center"
+          h="full"
+          position="relative"
+        >
+          {/* Drum Circle */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ 
+              scale: [0, 1.2, 1],
+              rotate: [0, 360]
+            }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
           >
-            Evolution Complete!
-          </Text>
+            <Box
+              w="200px"
+              h="200px"
+              borderRadius="full"
+              border="4px solid"
+              borderColor="#E5FF44"
+              position="relative"
+              animation={`${drumBeat} 1s infinite`}
+              _before={{
+                content: '""',
+                position: "absolute",
+                inset: "-20px",
+                border: "2px solid",
+                borderColor: "rgba(229, 255, 68, 0.3)",
+                borderRadius: "full",
+              }}
+            >
+              <motion.div
+                animate={{ 
+                  rotate: 360,
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{ 
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+              >
+                <Icon 
+                  as={Star} 
+                  w={20} 
+                  h={20} 
+                  color="#E5FF44"
+                  position="absolute"
+                  top="50%"
+                  left="50%"
+                  transform="translate(-50%, -50%)"
+                />
+              </motion.div>
+            </Box>
+          </motion.div>
+
+          {/* Text Animation */}
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Text
+              fontSize="4xl"
+              fontWeight="bold"
+              bgGradient="linear(to-r, #E5FF44, #6B4BFF)"
+              bgClip="text"
+              textAlign="center"
+              textShadow="0 0 20px rgba(229, 255, 68, 0.3)"
+            >
+              Evolution Complete!
+            </Text>
+          </motion.div>
+
+          {/* Nature Particles */}
+          <Particles
+            id="evolution-particles"
+            options={{
+              particles: {
+                number: { value: 100 },
+                color: { value: "#E5FF44" },
+                shape: { type: "circle" },
+                opacity: {
+                  value: 0.5,
+                  random: true,
+                  animation: {
+                    enable: true,
+                    speed: 1,
+                    minimumValue: 0.1,
+                  }
+                },
+                size: {
+                  value: 3,
+                  random: true,
+                  animation: {
+                    enable: true,
+                    speed: 2,
+                    minimumValue: 0.5,
+                  }
+                },
+                move: {
+                  enable: true,
+                  speed: 3,
+                  direction: "top",
+                  random: true,
+                  straight: false,
+                  outModes: { default: "out" }
+                }
+              }
+            }}
+            style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%"
+            }}
+          />
         </VStack>
       </Box>
     </motion.div>
@@ -243,6 +383,71 @@ const ParallaxBackground = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+const TransactionFeedback = ({ status }: { status: 'pending' | 'success' | 'error' | null }) => {
+  if (!status) return null;
+
+  const config = {
+    pending: {
+      color: '#E5FF44',
+      icon: TreePine,
+      text: 'Transaction in progress...'
+    },
+    success: {
+      color: '#2A4C3B',
+      icon: Leaf,
+      text: 'Transaction successful!'
+    },
+    error: {
+      color: '#FF4444',
+      icon: Flame,
+      text: 'Transaction failed'
+    }
+  };
+
+  const currentConfig = config[status];
+
+  return (
+    <motion.div
+      initial={{ x: 300, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 300, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 100 }}
+    >
+      <TribalContainer
+        position="fixed"
+        bottom="4"
+        right="4"
+        minW="300px"
+        variant="dark"
+        showVines={false}
+      >
+        <HStack spacing={4}>
+          <motion.div
+            animate={{ 
+              rotate: status === 'pending' ? 360 : 0,
+              scale: [1, 1.2, 1]
+            }}
+            transition={{ 
+              rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+              scale: { duration: 1, repeat: Infinity }
+            }}
+          >
+            <Icon 
+              as={currentConfig.icon} 
+              w={6} 
+              h={6} 
+              color={currentConfig.color} 
+            />
+          </motion.div>
+          <Text color={currentConfig.color}>
+            {currentConfig.text}
+          </Text>
+        </HStack>
+      </TribalContainer>
+    </motion.div>
+  );
+};
+
 const CryptoGorillaGame: React.FC = () => {
   const { account, signAndSubmitTransaction } = useWallet();
   const toast = useToast();
@@ -267,18 +472,11 @@ const CryptoGorillaGame: React.FC = () => {
   ]);
   const [bananaTokens, setBananaTokens] = useState(0);
   const [tribeScore, setTribeScore] = useState(0);
-  const [lastActionTime, setLastActionTime] = useState<number>(0);
   const [showEvolution, setShowEvolution] = useState(false);
 
-  useEffect(() => {
-    if (account?.address) {
-      fetchTribeData();
-    }
-  }, [account]);
-
-  useEffect(() => {
-    calculateTribeScore();
-  }, [tribe]);
+  const particlesInit = useCallback(async (engine: Engine) => {
+    await loadFull(engine);
+  }, []);
 
   const fetchTribeData = async () => {
     if (!account?.address) return;
@@ -320,18 +518,20 @@ const CryptoGorillaGame: React.FC = () => {
       });
       
       setTribeScore(Number(scoreResponse[0]));
-
-      const lastActionResponse = await client.view({
-        function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::get_last_action_time`,
-        type_arguments: [],
-        arguments: [account.address],
-      });
-      
-      setLastActionTime(Number(lastActionResponse[0]));
     } catch (error) {
       console.error("Error fetching tribe data:", error);
     }
   };
+
+  React.useEffect(() => {
+    if (account?.address) {
+      fetchTribeData();
+    }
+  }, [account]);
+
+  React.useEffect(() => {
+    calculateTribeScore();
+  }, [tribe]);
 
   const calculateTribeScore = () => {
     const activeGorillas = tribe.filter((g): g is Gorilla => g !== null);
@@ -356,58 +556,6 @@ const CryptoGorillaGame: React.FC = () => {
     // Calculate final score (weighted average)
     const finalScore = (statsScore * 0.4 + stageScore * 0.3 + rarityScore * 0.3) * 100;
     setTribeScore(Math.round(finalScore));
-  };
-
-  // Transaction feedback component
-  const TransactionFeedback = ({ status }: { status: 'pending' | 'success' | 'error' | null }) => {
-    if (!status) return null;
-
-    const config = {
-      pending: {
-        color: 'yellow.400',
-        icon: '⏳',
-        text: 'Transaction in progress...'
-      },
-      success: {
-        color: 'green.400',
-        icon: '✅',
-        text: 'Transaction successful!'
-      },
-      error: {
-        color: 'red.400',
-        icon: '❌',
-        text: 'Transaction failed'
-      }
-    };
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-      >
-        <Box
-          position="fixed"
-          bottom="4"
-          right="4"
-          bg="whiteAlpha.100"
-          backdropFilter="blur(10px)"
-          color="white"
-          px="6"
-          py="3"
-          borderRadius="xl"
-          border="1px solid"
-          borderColor="whiteAlpha.200"
-          boxShadow="lg"
-          zIndex={1000}
-        >
-          <HStack spacing={3}>
-            <Text fontSize="xl">{config[status].icon}</Text>
-            <Text color={config[status].color}>{config[status].text}</Text>
-          </HStack>
-        </Box>
-      </motion.div>
-    );
   };
 
   const showTransactionToast = (type: 'pending' | 'success' | 'error', message: string) => {
@@ -574,37 +722,51 @@ const CryptoGorillaGame: React.FC = () => {
             </Heading>
           </Box>
 
-          {/* Stats Bar */}
-          <HStack spacing={4}>
-            <Button
-              leftIcon={<Coins />}
-              bg="white"
-              color="black"
-              _hover={{ bg: 'gray.100', transform: 'translateY(-2px)' }}
-              _active={{ transform: 'translateY(0)' }}
-              size="lg"
-              px={8}
-              transition="all 0.2s"
-            >
-              {bananaTokens} Banana Tokens
-            </Button>
-            <Button
-              leftIcon={<Trophy />}
-              variant="outline"
-              color="white"
-              borderColor="purple.400"
-              _hover={{ bg: 'whiteAlpha.100', transform: 'translateY(-2px)' }}
-              _active={{ transform: 'translateY(0)' }}
-              size="lg"
-              px={8}
-              transition="all 0.2s"
-            >
-              Tribe Score: {tribeScore}%
-            </Button>
-          </HStack>
+          <TribalContainer>
+            <HStack spacing={8} justify="center" wrap="wrap">
+              <TribalButton
+                icon={Coins}
+                variant="primary"
+                size="lg"
+                px={8}
+              >
+                <HStack>
+                  <Text>{bananaTokens}</Text>
+                  <Text color="rgba(229, 255, 68, 0.8)">Banana Tokens</Text>
+                </HStack>
+              </TribalButton>
 
-          {/* Cards Grid */}
-          <Box position="relative" w="full" mt={8}>
+              <TribalButton
+                icon={Trophy}
+                variant="secondary"
+                size="lg"
+                px={8}
+              >
+                <HStack>
+                  <Text>Tribe Score:</Text>
+                  <Text color="rgba(229, 255, 68, 0.8)">{tribeScore}%</Text>
+                </HStack>
+              </TribalButton>
+
+              <TribalButton
+                icon={TreePine}
+                variant="primary"
+                size="lg"
+                px={8}
+              >
+                <HStack>
+                  <Text>Active Gorillas:</Text>
+                  <Text color="rgba(229, 255, 68, 0.8)">
+                    {tribe.filter(g => g !== null).length}/{MAX_TRIBE_SIZE}
+                  </Text>
+                </HStack>
+              </TribalButton>
+            </HStack>
+          </TribalContainer>
+
+          <TribalDivider variant="glowing" />
+
+          <Box position="relative" w="full">
             <Grid
               templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)' }}
               gap={8}
@@ -631,27 +793,24 @@ const CryptoGorillaGame: React.FC = () => {
             </Grid>
           </Box>
 
-          {/* Tips Section */}
-          <Box
-            w="full"
-            bg="whiteAlpha.50"
-            backdropFilter="blur(10px)"
-            p={6}
-            borderRadius="xl"
-            border="1px solid"
-            borderColor="whiteAlpha.100"
-          >
-            <VStack align="start" spacing={3}>
-              <Text color="gray.300" fontSize="lg">
-                💡 Tip: Burning a gorilla will give you 50 Banana Tokens to mint a new one.
-              </Text>
-              {getRecommendedBurn() && (
+          <TribalContainer variant="dark">
+            <VStack align="start" spacing={4}>
+              <HStack spacing={3}>
+                <Icon as={Leaf} color="#E5FF44" />
                 <Text color="gray.300" fontSize="lg">
-                  🔥 Consider burning {getRecommendedBurn()?.name} (Score: {calculateGorillaScore(getRecommendedBurn()!).toFixed(2)})
+                  Tip: Burning a gorilla will give you 50 Banana Tokens to mint a new one.
                 </Text>
+              </HStack>
+              {getRecommendedBurn() && (
+                <HStack spacing={3}>
+                  <Icon as={Flame} color="#E5FF44" />
+                  <Text color="gray.300" fontSize="lg">
+                    Consider burning {getRecommendedBurn()?.name} (Score: {calculateGorillaScore(getRecommendedBurn()!).toFixed(2)})
+                  </Text>
+                </HStack>
               )}
             </VStack>
-          </Box>
+          </TribalContainer>
         </VStack>
       </Container>
 
