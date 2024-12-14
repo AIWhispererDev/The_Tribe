@@ -77,6 +77,29 @@ const StatBar = ({ label, value, max = 10 }: { label: string; value: number; max
   </Box>
 );
 
+const rarityEffects = {
+  legendary: {
+    borderGradient: 'linear-gradient(45deg, #FFD700, #FFA500)',
+    iconGlow: '0 0 15px #FFD700',
+    backgroundEffect: 'radial-gradient(circle at center, rgba(255, 215, 0, 0.15), transparent 70%)'
+  },
+  epic: {
+    borderGradient: 'linear-gradient(45deg, #9400D3, #4B0082)',
+    iconGlow: '0 0 15px #9400D3',
+    backgroundEffect: 'radial-gradient(circle at center, rgba(148, 0, 211, 0.15), transparent 70%)'
+  },
+  rare: {
+    borderGradient: 'linear-gradient(45deg, #0096FF, #00008B)',
+    iconGlow: '0 0 15px #0096FF',
+    backgroundEffect: 'radial-gradient(circle at center, rgba(0, 150, 255, 0.15), transparent 70%)'
+  },
+  common: {
+    borderGradient: 'linear-gradient(45deg, #808080, #404040)',
+    iconGlow: '0 0 15px #808080',
+    backgroundEffect: 'radial-gradient(circle at center, rgba(128, 128, 128, 0.15), transparent 70%)'
+  }
+};
+
 const StageProgress = ({ stage }: { stage: number }) => {
   const stages = ['Baby', 'Juvenile', 'Adult', 'Silverback'];
   return (
@@ -92,18 +115,6 @@ const StageProgress = ({ stage }: { stage: number }) => {
           }
         }}
       />
-      <HStack justify="space-between" w="full">
-        {stages.map((s, i) => (
-          <Box
-            key={s}
-            w="2"
-            h="2"
-            borderRadius="full"
-            bg={i <= stage ? 'purple.400' : 'whiteAlpha.200'}
-            transition="all 0.3s"
-          />
-        ))}
-      </HStack>
       <HStack justify="space-between" w="full">
         {stages.map((s, i) => (
           <Text
@@ -238,6 +249,8 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
     );
   }
 
+  const effect = rarityEffects[gorilla.rarity];
+
   return (
     <Box
       onClick={handleClick}
@@ -275,11 +288,12 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
             overflow="hidden"
             h="full"
             sx={{
-              background: 'linear-gradient(165deg, rgba(107, 75, 255, 0.2), rgba(107, 75, 255, 0.05))',
+              background: effect.backgroundEffect,
               backdropFilter: 'blur(10px)',
               border: '1px solid',
-              borderColor: isRecommendedBurn ? 'red.400' : 'rgba(107, 75, 255, 0.3)',
-              boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+              borderImage: effect.borderGradient,
+              borderImageSlice: 1,
+              boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.37), ${effect.iconGlow}`,
               _before: {
                 content: '""',
                 position: 'absolute',
@@ -287,7 +301,8 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
                 left: 0,
                 right: 0,
                 bottom: 0,
-                background: 'linear-gradient(45deg, rgba(107, 75, 255, 0.1), rgba(107, 75, 255, 0))',
+                background: effect.borderGradient,
+                opacity: 0.05,
                 zIndex: 0,
               }
             }}
@@ -391,7 +406,7 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
           </Box>
         </Box>
 
-        {/* Back of card (Stats) */}
+        {/* Back of card */}
         <Box
           position="absolute"
           w="full"
@@ -408,11 +423,12 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
             overflow="hidden"
             h="full"
             sx={{
-              background: 'linear-gradient(165deg, rgba(107, 75, 255, 0.2), rgba(107, 75, 255, 0.05))',
+              background: effect.backgroundEffect,
               backdropFilter: 'blur(10px)',
               border: '1px solid',
-              borderColor: 'rgba(107, 75, 255, 0.3)',
-              boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+              borderImage: effect.borderGradient,
+              borderImageSlice: 1,
+              boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.37), ${effect.iconGlow}`,
             }}
             p={4}
           >
