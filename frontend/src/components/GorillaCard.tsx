@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react';
-import { motion, useMotionValue, useTransform, useSpring, useAnimation } from 'framer-motion';
-import { Box, VStack, HStack, Text, Button, Progress, Badge, useColorModeValue } from '@chakra-ui/react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Box, VStack, HStack, Text, Button, Progress, Badge } from '@chakra-ui/react';
 import { Flame, ArrowUpCircle, Star } from 'lucide-react';
 
 interface GorillaCardProps {
@@ -139,77 +139,21 @@ const StatBar = ({ label, value, max = 10, color }: { label: string; value: numb
   </Box>
 );
 
-// Card tilt configuration
-const TILT_MAX = 15; // Maximum tilt angle
-const SHINE_DISTANCE = 200; // Distance for shine effect
-
-interface MousePosition {
-  x: number;
-  y: number;
-}
-
 export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, isRecommendedBurn }: GorillaCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  
-  // Mouse position values for tilt effect
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
 
-  // Transform mouse position into rotation values
-  const rotateX = useTransform(mouseY, [-0.5, 0.5], [TILT_MAX, -TILT_MAX]);
-  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-TILT_MAX, TILT_MAX]);
-
-  // Add spring physics to the rotation for smooth animation
-  const springConfig = { damping: 20, stiffness: 200 };
-  const rotateXSpring = useSpring(rotateX, springConfig);
-  const rotateYSpring = useSpring(rotateY, springConfig);
-
-  // Shine effect animation
-  const shinePosition = useMotionValue(SHINE_DISTANCE);
-  const shineOpacity = useTransform(
-    shinePosition,
-    [0, SHINE_DISTANCE / 2, SHINE_DISTANCE],
-    [0, 0.5, 0]
-  );
-
-  const handleMouseMove = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
-      if (!isHovered) return;
-
-      const rect = event.currentTarget.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      
-      // Calculate normalized position (-0.5 to 0.5)
-      const x = (event.clientX - centerX) / rect.width;
-      const y = (event.clientY - centerY) / rect.height;
-
-      mouseX.set(x);
-      mouseY.set(y);
-      
-      // Update shine effect position
-      const angle = Math.atan2(y, x);
-      const distance = Math.sqrt(x * x + y * y) * SHINE_DISTANCE;
-      shinePosition.set(distance);
-    },
-    [isHovered, mouseX, mouseY, shinePosition]
-  );
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
+  const handleClick = () => {
+    setIsFlipped(!isFlipped);
   };
 
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    mouseX.set(0);
-    mouseY.set(0);
-    shinePosition.set(SHINE_DISTANCE);
+  const handleButtonClick = (e: React.MouseEvent, callback: () => void) => {
+    e.stopPropagation();
+    callback();
   };
 
   if (!gorilla) {
     return (
-      <MotionBox
+      <Box
         w="250px"
         h="350px"
         bg="whiteAlpha.100"
@@ -217,16 +161,10 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
         p={4}
         position="relative"
         overflow="hidden"
-        whileHover={{ 
-          y: -8,
-          scale: 1.02,
-          transition: { duration: 0.2 }
-        }}
         sx={{
           backdropFilter: 'blur(10px)',
           border: '1px solid',
           borderColor: 'whiteAlpha.200',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
         }}
       >
         <VStack h="full" justify="center" spacing={6}>
@@ -242,41 +180,23 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
             <Text color="whiteAlpha.500" fontSize="lg">Empty Slot</Text>
           </Box>
           <Button
-            as={motion.button}
-            onClick={onMint}
+            onClick={() => onMint()}
             colorScheme="purple"
             size="lg"
             w="full"
-            whileHover={{ 
-              scale: 1.05,
-              transition: { duration: 0.2 }
-            }}
-            whileTap={{ scale: 0.95 }}
           >
             Mint New Gorilla
           </Button>
         </VStack>
-      </MotionBox>
+      </Box>
     );
   }
-
-  const handleClick = () => {
-    if (!isHovered) {
-      setIsFlipped(!isFlipped);
-    }
-  };
 
   const cardFront = (
     <Box
       position="absolute"
       w="full"
       h="full"
-      onClick={(e) => {
-        e.stopPropagation();
-        if (!isHovered) {
-          setIsFlipped(true);
-        }
-      }}
       sx={{
         backfaceVisibility: 'hidden',
         background: rarityConfig[gorilla.rarity].gradient,
@@ -318,9 +238,6 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
             h="full"
             sx={{
               objectFit: 'cover',
-              transform: 'scale(1.1)',
-              transition: 'transform 0.3s',
-              _hover: { transform: 'scale(1.2)' }
             }}
           />
         </Box>
@@ -362,12 +279,6 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
       position="absolute"
       w="full"
       h="full"
-      onClick={(e) => {
-        e.stopPropagation();
-        if (!isHovered) {
-          setIsFlipped(false);
-        }
-      }}
       sx={{
         backfaceVisibility: 'hidden',
         background: rarityConfig[gorilla.rarity].gradient,
@@ -407,10 +318,7 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
           {gorilla.stage < 3 && (
             <Button
               leftIcon={<ArrowUpCircle size={16} />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onEvolve(gorilla.id);
-              }}
+              onClick={(e) => handleButtonClick(e, () => onEvolve(gorilla.id))}
               colorScheme={getStageColorScheme(gorilla.stage)}
               size="sm"
               flex={1}
@@ -420,10 +328,7 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
           )}
           <Button
             leftIcon={<Flame size={16} />}
-            onClick={(e) => {
-              e.stopPropagation();
-              onBurn(gorilla.id);
-            }}
+            onClick={(e) => handleButtonClick(e, () => onBurn(gorilla.id))}
             colorScheme="red"
             size="sm"
             flex={1}
@@ -462,44 +367,13 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
         w="full"
         h="full"
         position="relative"
-        onMouseMove={handleMouseMove}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
         style={{
-          rotateX: rotateXSpring,
-          rotateY: rotateYSpring,
           transformStyle: 'preserve-3d'
         }}
         animate={{ rotateY: isFlipped ? 180 : 0 }}
         transition={{ duration: 0.6 }}
-        onClick={handleClick}
-        whileHover={{ scale: 1.02 }}
       >
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          pointerEvents="none"
-          overflow="hidden"
-          borderRadius="xl"
-          sx={{
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: '-100%',
-              left: '-100%',
-              right: '-100%',
-              bottom: '-100%',
-              background: 'linear-gradient(45deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%)',
-              transform: 'rotate(45deg)',
-              transition: 'all 0.3s ease',
-              opacity: isHovered ? 1 : 0,
-              zIndex: 1
-            }
-          }}
-        />
         {cardFront}
         {cardBack}
       </MotionBox>
