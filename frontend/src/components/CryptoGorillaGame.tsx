@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
 import { Box, Container, Heading, Text, VStack, HStack, Button, Grid, keyframes, useToast } from '@chakra-ui/react';
-import { Share2, PlayCircle, Coins, Trophy } from 'lucide-react';
+import { Coins, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GorillaCard from './GorillaCard';
 
@@ -499,7 +499,7 @@ const CryptoGorillaGame: React.FC = () => {
         </VStack>
       </Container>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         <TransactionFeedback status={transactionStatus} />
       </AnimatePresence>
     </Box>
