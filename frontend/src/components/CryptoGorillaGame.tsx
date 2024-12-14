@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
-import { Box, Container, Heading, Text, VStack, HStack, Button, Grid, keyframes, useToast } from '@chakra-ui/react';
-import { Coins, Trophy } from 'lucide-react';
+import { Box, Container, Heading, Text, VStack, HStack, Button, Grid, keyframes, useToast, Icon } from '@chakra-ui/react';
+import { Coins, Trophy, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GorillaCard from './GorillaCard';
 
@@ -71,6 +71,38 @@ const ConnectingLine = () => (
   />
 );
 
+const EvolutionCelebration = () => {
+  return (
+    <motion.div
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ 
+        scale: [1, 1.2, 1],
+        opacity: [0, 1, 0]
+      }}
+      transition={{ duration: 1.5 }}
+    >
+      <Box
+        position="absolute"
+        inset={0}
+        bgGradient="radial(circle at center, purple.500 0%, transparent 70%)"
+        zIndex={10}
+      >
+        <VStack spacing={4} justify="center" h="full">
+          <Icon as={Star} w={20} h={20} color="yellow.400" />
+          <Text
+            fontSize="2xl"
+            fontWeight="bold"
+            bgGradient="linear(to-r, yellow.400, purple.400)"
+            bgClip="text"
+          >
+            Evolution Complete!
+          </Text>
+        </VStack>
+      </Box>
+    </motion.div>
+  );
+};
+
 const CryptoGorillaGame: React.FC = () => {
   const { account, signAndSubmitTransaction } = useWallet();
   const toast = useToast();
@@ -96,6 +128,7 @@ const CryptoGorillaGame: React.FC = () => {
   const [bananaTokens, setBananaTokens] = useState(0);
   const [tribeScore, setTribeScore] = useState(0);
   const [lastActionTime, setLastActionTime] = useState<number>(0);
+  const [showEvolution, setShowEvolution] = useState(false);
 
   useEffect(() => {
     if (account?.address) {
@@ -311,6 +344,9 @@ const CryptoGorillaGame: React.FC = () => {
         return gorilla;
       }));
 
+      setShowEvolution(true);
+      setTimeout(() => setShowEvolution(false), 1500);
+
       setTransactionStatus('success');
       showTransactionToast('success', 'Your gorilla has evolved successfully!');
     } catch (error) {
@@ -500,6 +536,7 @@ const CryptoGorillaGame: React.FC = () => {
       </Container>
 
       <AnimatePresence mode="wait">
+        {showEvolution && <EvolutionCelebration />}
         <TransactionFeedback status={transactionStatus} />
       </AnimatePresence>
     </Box>
