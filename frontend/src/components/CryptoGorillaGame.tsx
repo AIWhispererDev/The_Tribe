@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { AptosClient, Types } from "aptos";
+import { AptosClient } from "aptos";
+import { Box, Container, Flex, Text, VStack, HStack, Badge, Tooltip, useColorModeValue } from '@chakra-ui/react';
+import { Coins, Trophy, Info } from 'lucide-react';
 import GorillaCard from './GorillaCard';
 
 const CRYPTO_GORILLA_ADDRESS = "YOUR_CONTRACT_ADDRESS_HERE";
@@ -52,6 +54,7 @@ const CryptoGorillaGame: React.FC = () => {
   ]);
   const [bananaTokens, setBananaTokens] = useState(0);
   const [tribeScore, setTribeScore] = useState(0);
+  const [lastActionTime, setLastActionTime] = useState<number>(0);
 
   useEffect(() => {
     if (account?.address) {
@@ -73,13 +76,25 @@ const CryptoGorillaGame: React.FC = () => {
         arguments: [account.address],
       });
 
-      const detailedTribe = await Promise.all(tribeResponse[0].map(async (gorillaId: string) => {
+      const gorillaIds = tribeResponse[0] as string[];
+      const detailedTribe = await Promise.all(gorillaIds.map(async (gorillaId: string) => {
         const info = await client.view({
           function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::get_gorilla_info`,
           type_arguments: [],
           arguments: [gorillaId],
         });
-        return { id: gorillaId, strength: info[0], intelligence: info[1], socialSkills: info[2], stage: info[3] };
+        return { 
+          id: gorillaId, 
+          strength: Number(info[0]), 
+          intelligence: Number(info[1]), 
+          socialSkills: Number(info[2]), 
+          stage: Number(info[3]),
+          agility: 1,
+          endurance: 1,
+          leadership: 1,
+          name: 'Gorilla',
+          rarity: 'common' as const
+        };
       }));
 
       setTribe(detailedTribe);
@@ -89,18 +104,19 @@ const CryptoGorillaGame: React.FC = () => {
         type_arguments: [],
         arguments: [account.address],
       });
-      setTribeScore(scoreResponse[0]);
+      
+      setTribeScore(Number(scoreResponse[0]));
 
       const lastActionResponse = await client.view({
         function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::get_last_action_time`,
         type_arguments: [],
         arguments: [account.address],
       });
-      setLastActionTime(lastActionResponse[0]);
+      
+      setLastActionTime(Number(lastActionResponse[0]));
     } catch (error) {
       console.error("Error fetching tribe data:", error);
     }
-    console.log("Fetching tribe data...");
   };
 
   const calculateTribeScore = () => {
@@ -218,31 +234,122 @@ const CryptoGorillaGame: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: 'auto', padding: '1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-        <span style={{ color: 'white', fontSize: '1.25rem' }}>Banana Tokens: {bananaTokens}</span>
-        <span style={{ color: 'white', fontSize: '1.25rem' }}>Tribe Score: {tribeScore}%</span>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem' }}>
-        {tribe.map((gorilla, index) => (
-          <GorillaCard 
-            key={gorilla ? gorilla.id : `empty-${index}`}
-            gorilla={gorilla}
-            onMint={() => mintGorilla(index)}
-            onEvolve={evolveGorilla}
-            onBurn={burnGorilla}
-            score={gorilla ? calculateGorillaScore(gorilla) : 0}
-            isRecommendedBurn={gorilla === getRecommendedBurn()}
-          />
-        ))}
-      </div>
-      <div style={{ marginTop: '1rem', color: 'white' }}>
-        <p>Tip: Burning a gorilla will give you 50 Banana Tokens to mint a new one.</p>
-        {getRecommendedBurn() && (
-          <p>Recommended gorilla to burn: {getRecommendedBurn()?.name} (Score: {calculateGorillaScore(getRecommendedBurn()!).toFixed(2)})</p>
-        )}
-      </div>
-    </div>
+    <Box
+      minH="100vh"
+      bg="black"
+      position="relative"
+      overflow="hidden"
+      py={8}
+    >
+      <Container maxW="container.xl" position="relative">
+        <VStack spacing={8}>
+          {/* Stats Bar */}
+          <Flex
+            w="full"
+            justify="space-between"
+            align="center"
+            bg="whiteAlpha.100"
+            backdropFilter="blur(10px)"
+            p={4}
+            borderRadius="xl"
+            border="1px solid"
+            borderColor="whiteAlpha.200"
+          >
+            <HStack spacing={6}>
+              <HStack>
+                <Coins size={24} color="yellow.400" />
+                <VStack align="start" spacing={0}>
+                  <Text color="gray.400" fontSize="sm">Banana Tokens</Text>
+                  <Text color="white" fontSize="xl" fontWeight="bold">
+                    {bananaTokens}
+                  </Text>
+                </VStack>
+              </HStack>
+
+              <HStack>
+                <Trophy size={24} color="purple.400" />
+                <VStack align="start" spacing={0}>
+                  <Text color="gray.400" fontSize="sm">Tribe Score</Text>
+                  <Text 
+                    color="white" 
+                    fontSize="xl" 
+                    fontWeight="bold"
+                    bgGradient="linear(to-r, purple.400, blue.400)"
+                    bgClip="text"
+                  >
+                    {tribeScore}%
+                  </Text>
+                </VStack>
+              </HStack>
+            </HStack>
+
+            <Tooltip 
+              label="Burn a gorilla to receive 50 Banana Tokens" 
+              placement="top"
+            >
+              <Box cursor="pointer">
+                <Info size={20} color="gray.400" />
+              </Box>
+            </Tooltip>
+          </Flex>
+
+          {/* Cards Grid */}
+          <Box w="full">
+            <Flex 
+              flexWrap="wrap" 
+              gap={6} 
+              justify="center"
+              sx={{
+                '& > div': {
+                  flex: '0 0 auto',
+                }
+              }}
+            >
+              {tribe.map((gorilla, index) => (
+                <Box
+                  key={gorilla ? gorilla.id : `empty-${index}`}
+                  position="relative"
+                >
+                  <GorillaCard 
+                    gorilla={gorilla}
+                    onMint={() => mintGorilla(index)}
+                    onEvolve={evolveGorilla}
+                    onBurn={burnGorilla}
+                    score={gorilla ? calculateGorillaScore(gorilla) : 0}
+                    isRecommendedBurn={gorilla === getRecommendedBurn()}
+                  />
+                </Box>
+              ))}
+            </Flex>
+          </Box>
+
+          {/* Tips Section */}
+          <Box
+            w="full"
+            bg="whiteAlpha.100"
+            backdropFilter="blur(10px)"
+            p={4}
+            borderRadius="xl"
+            border="1px solid"
+            borderColor="whiteAlpha.200"
+          >
+            <VStack align="start" spacing={3}>
+              <Text color="gray.300">
+                💡 Tip: Burning a gorilla will give you 50 Banana Tokens to mint a new one.
+              </Text>
+              {getRecommendedBurn() && (
+                <HStack>
+                  <Badge colorScheme="red">Recommendation</Badge>
+                  <Text color="gray.300">
+                    Consider burning {getRecommendedBurn()?.name} (Score: {calculateGorillaScore(getRecommendedBurn()!).toFixed(2)})
+                  </Text>
+                </HStack>
+              )}
+            </VStack>
+          </Box>
+        </VStack>
+      </Container>
+    </Box>
   );
 };
 

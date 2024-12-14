@@ -15,9 +15,20 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+
+const MotionBox = motion(Box);
+const MotionImage = motion(Image);
+const MotionText = motion(Text);
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { scrollY } = useScroll();
+
+  // Transform values for hero section
+  const heroOpacity = useTransform(scrollY, [0, 300], [1, 0]);
+  const heroScale = useTransform(scrollY, [0, 300], [1, 0.95]);
+  const heroY = useTransform(scrollY, [0, 300], [0, 50]);
 
   const handlePlayNow = () => {
     navigate('/game');
@@ -112,13 +123,24 @@ export default function LandingPage() {
           </Button>
         </Flex>
 
-        {/* Hero Section */}
+        {/* Hero Section with Scroll Animations */}
         <Container maxW="container.xl" pt={{ base: 20, md: 32 }} pb={20}>
-          <Box textAlign="center" mb={16}>
-            <Box
+          <MotionBox 
+            textAlign="center" 
+            mb={16}
+            style={{
+              opacity: heroOpacity,
+              scale: heroScale,
+              y: heroY
+            }}
+          >
+            <MotionBox
               mx="auto"
               mb={8}
               position="relative"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.8 }}
               _after={{
                 content: '""',
                 position: 'absolute',
@@ -131,24 +153,29 @@ export default function LandingPage() {
                 borderRadius: 'full'
               }}
             >
-              <Image
+              <MotionImage
                 src="/images/tribe-logo.png"
                 alt="THE TRIBE"
                 mx="auto"
                 maxW={{ base: "280px", md: "400px" }}
                 w="full"
                 filter="drop-shadow(0 0 20px rgba(204, 255, 0, 0.3))"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
               />
-            </Box>
-            <Text
+            </MotionBox>
+            <MotionText
               fontSize={{ base: 'xl', md: '2xl' }}
               color="#CCFF00"
               mb={12}
               letterSpacing="wide"
               opacity={0.9}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
             >
               BLOCKCHAIN GAME
-            </Text>
+            </MotionText>
             <Button
               bg="#CCFF00"
               color="black"
@@ -168,9 +195,9 @@ export default function LandingPage() {
             >
               PLAY NOW
             </Button>
-          </Box>
+          </MotionBox>
 
-          {/* NFT Cards */}
+          {/* NFT Cards with Scroll Animations */}
           <Grid
             templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }}
             gap={8}
@@ -178,19 +205,35 @@ export default function LandingPage() {
             mx="auto"
             px={4}
           >
-            {[1, 2, 3].map((item) => (
-              <Box
+            {[1, 2, 3].map((item, index) => (
+              <MotionBox
                 key={item}
                 className="nft-card"
                 position="relative"
                 transform={`rotate(${(item - 2) * 8}deg)`}
-                transition="all 0.3s"
-                _hover={{ 
-                  transform: 'rotate(0deg) translateY(-10px)',
-                  zIndex: 1
+                initial={{ 
+                  opacity: 0, 
+                  y: 50,
+                  rotate: (item - 2) * 8 
+                }}
+                whileInView={{ 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { 
+                    duration: 0.8,
+                    delay: index * 0.2 
+                  }
+                }}
+                viewport={{ once: true, margin: "-100px" }}
+                whileHover={{ 
+                  rotate: 0,
+                  y: -10,
+                  scale: 1.05,
+                  zIndex: 1,
+                  transition: { duration: 0.3 }
                 }}
               >
-                <Box
+                <MotionBox
                   className="nft-card-inner"
                   bg="black"
                   p={4}
@@ -199,17 +242,7 @@ export default function LandingPage() {
                   borderColor="rgba(204, 255, 0, 0.3)"
                   position="relative"
                   overflow="hidden"
-                  _before={{
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: '-100%',
-                    width: '200%',
-                    height: '100%',
-                    background: 'linear-gradient(90deg, transparent, rgba(204, 255, 0, 0.2), transparent)',
-                    animation: 'shine 2s infinite'
-                  }}
-                  _hover={{
+                  whileHover={{
                     borderColor: 'rgba(204, 255, 0, 0.8)',
                     boxShadow: '0 0 30px rgba(204, 255, 0, 0.2)'
                   }}
@@ -259,13 +292,22 @@ export default function LandingPage() {
                       </Text>
                     </Box>
                   </Box>
-                </Box>
-              </Box>
+                </MotionBox>
+              </MotionBox>
             ))}
           </Grid>
 
-          {/* Features Section */}
-          <Box mt={32} textAlign="center" position="relative" zIndex={2}>
+          {/* Features Section with Scroll Animations */}
+          <MotionBox 
+            mt={32} 
+            textAlign="center" 
+            position="relative" 
+            zIndex={2}
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+          >
             <Heading
               fontSize={{ base: '3xl', md: '4xl' }}
               mb={16}
@@ -326,10 +368,18 @@ export default function LandingPage() {
                 </Box>
               ))}
             </Grid>
-          </Box>
+          </MotionBox>
 
-          {/* Roadmap Section */}
-          <Box mt={32} position="relative" zIndex={2}>
+          {/* Roadmap Section with Scroll Animations */}
+          <MotionBox 
+            mt={32} 
+            position="relative" 
+            zIndex={2}
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+          >
             <Heading
               fontSize={{ base: '3xl', md: '4xl' }}
               mb={16}
@@ -426,7 +476,7 @@ export default function LandingPage() {
                 </Box>
               ))}
             </Grid>
-          </Box>
+          </MotionBox>
         </Container>
       </Box>
     </Box>
