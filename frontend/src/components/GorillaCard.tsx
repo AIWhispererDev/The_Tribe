@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useCallback } from 'react';
+import { motion, useMotionValue, useTransform, useSpring, useAnimation } from 'framer-motion';
 import { Box, VStack, HStack, Text, Button, Progress, Badge, useColorModeValue } from '@chakra-ui/react';
-import { Flame, ArrowUpCircle } from 'lucide-react';
+import { Flame, ArrowUpCircle, Star } from 'lucide-react';
 
 interface GorillaCardProps {
   gorilla: {
@@ -21,6 +21,12 @@ interface GorillaCardProps {
   onBurn: (id: string) => void;
   score: number;
   isRecommendedBurn: boolean;
+}
+
+interface StageInfo {
+  name: string;
+  color: string;
+  description: string;
 }
 
 const rarityConfig = {
@@ -48,6 +54,74 @@ const rarityConfig = {
 
 const MotionBox = motion(Box);
 
+const getStageColorScheme = (stage: number): string => {
+  const schemes = ['green', 'blue', 'purple', 'orange'];
+  return schemes[Math.min(stage, schemes.length - 1)];
+};
+
+const getStageInfo = (stage: number): StageInfo => {
+  const stages: Record<number, StageInfo> = {
+    0: {
+      name: 'Baby',
+      color: 'green.400',
+      description: 'Just starting out'
+    },
+    1: {
+      name: 'Juvenile',
+      color: 'blue.400',
+      description: 'Growing stronger'
+    },
+    2: {
+      name: 'Adult',
+      color: 'purple.400',
+      description: 'Peak performance'
+    },
+    3: {
+      name: 'Silverback',
+      color: 'orange.400',
+      description: 'Legendary status'
+    }
+  };
+
+  return stages[Math.min(stage, 3)] || stages[0];
+};
+
+const EvolutionProgress = ({ stage }: { stage: number }) => {
+  const stageInfo = getStageInfo(stage);
+  const progress = ((stage + 1) / 4) * 100;
+
+  return (
+    <Box w="full">
+      <HStack justify="space-between" mb={1}>
+        <HStack>
+          <Star size={14} color={stageInfo.color} />
+          <Text fontSize="xs" color="gray.700" fontWeight="bold">
+            {stageInfo.name} Stage
+          </Text>
+        </HStack>
+        <Text fontSize="xs" color="gray.600">
+          {stage + 1}/4
+        </Text>
+      </HStack>
+      <Progress
+        value={progress}
+        size="sm"
+        borderRadius="full"
+        colorScheme={getStageColorScheme(stage)}
+        bg="whiteAlpha.300"
+        sx={{
+          '& > div': {
+            transition: 'all 0.8s ease-in-out'
+          }
+        }}
+      />
+      <Text fontSize="xs" color="gray.600" mt={1}>
+        {stageInfo.description}
+      </Text>
+    </Box>
+  );
+};
+
 const StatBar = ({ label, value, max = 10, color }: { label: string; value: number; max?: number; color: string }) => (
   <Box w="full">
     <HStack justify="space-between" mb={1}>
@@ -65,12 +139,77 @@ const StatBar = ({ label, value, max = 10, color }: { label: string; value: numb
   </Box>
 );
 
+// Card tilt configuration
+const TILT_MAX = 15; // Maximum tilt angle
+const SHINE_DISTANCE = 200; // Distance for shine effect
+
+interface MousePosition {
+  x: number;
+  y: number;
+}
+
 export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, isRecommendedBurn }: GorillaCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  
+  // Mouse position values for tilt effect
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // Transform mouse position into rotation values
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], [TILT_MAX, -TILT_MAX]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-TILT_MAX, TILT_MAX]);
+
+  // Add spring physics to the rotation for smooth animation
+  const springConfig = { damping: 20, stiffness: 200 };
+  const rotateXSpring = useSpring(rotateX, springConfig);
+  const rotateYSpring = useSpring(rotateY, springConfig);
+
+  // Shine effect animation
+  const shinePosition = useMotionValue(SHINE_DISTANCE);
+  const shineOpacity = useTransform(
+    shinePosition,
+    [0, SHINE_DISTANCE / 2, SHINE_DISTANCE],
+    [0, 0.5, 0]
+  );
+
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!isHovered) return;
+
+      const rect = event.currentTarget.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      // Calculate normalized position (-0.5 to 0.5)
+      const x = (event.clientX - centerX) / rect.width;
+      const y = (event.clientY - centerY) / rect.height;
+
+      mouseX.set(x);
+      mouseY.set(y);
+      
+      // Update shine effect position
+      const angle = Math.atan2(y, x);
+      const distance = Math.sqrt(x * x + y * y) * SHINE_DISTANCE;
+      shinePosition.set(distance);
+    },
+    [isHovered, mouseX, mouseY, shinePosition]
+  );
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    mouseX.set(0);
+    mouseY.set(0);
+    shinePosition.set(SHINE_DISTANCE);
+  };
 
   if (!gorilla) {
     return (
-      <Box
+      <MotionBox
         w="250px"
         h="350px"
         bg="whiteAlpha.100"
@@ -78,15 +217,16 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
         p={4}
         position="relative"
         overflow="hidden"
+        whileHover={{ 
+          y: -8,
+          scale: 1.02,
+          transition: { duration: 0.2 }
+        }}
         sx={{
           backdropFilter: 'blur(10px)',
           border: '1px solid',
           borderColor: 'whiteAlpha.200',
-          transition: 'all 0.3s',
-          _hover: {
-            transform: 'translateY(-4px)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
-          }
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
         }}
       >
         <VStack h="full" justify="center" spacing={6}>
@@ -102,26 +242,28 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
             <Text color="whiteAlpha.500" fontSize="lg">Empty Slot</Text>
           </Box>
           <Button
+            as={motion.button}
             onClick={onMint}
             colorScheme="purple"
             size="lg"
             w="full"
-            sx={{
-              _hover: {
-                transform: 'translateY(-2px)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-              }
+            whileHover={{ 
+              scale: 1.05,
+              transition: { duration: 0.2 }
             }}
+            whileTap={{ scale: 0.95 }}
           >
             Mint New Gorilla
           </Button>
         </VStack>
-      </Box>
+      </MotionBox>
     );
   }
 
   const handleClick = () => {
-    setIsFlipped(!isFlipped);
+    if (!isHovered) {
+      setIsFlipped(!isFlipped);
+    }
   };
 
   const cardFront = (
@@ -129,6 +271,12 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
       position="absolute"
       w="full"
       h="full"
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!isHovered) {
+          setIsFlipped(true);
+        }
+      }}
       sx={{
         backfaceVisibility: 'hidden',
         background: rarityConfig[gorilla.rarity].gradient,
@@ -142,8 +290,15 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
           <Badge colorScheme={rarityConfig[gorilla.rarity].badge} fontSize="xs">
             {gorilla.rarity.toUpperCase()}
           </Badge>
-          <Badge colorScheme="gray" fontSize="xs">
-            Stage {gorilla.stage}
+          <Badge 
+            colorScheme={getStageColorScheme(gorilla.stage)} 
+            fontSize="xs"
+            display="flex"
+            alignItems="center"
+            gap={1}
+          >
+            <Star size={12} />
+            Stage {gorilla.stage + 1}
           </Badge>
         </HStack>
 
@@ -179,6 +334,8 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
             {gorilla.name}
           </Text>
           
+          <EvolutionProgress stage={gorilla.stage} />
+
           <HStack w="full" justify="space-between">
             <Text fontSize="sm" color="gray.700">
               Power Level: {gorilla.strength + gorilla.intelligence + gorilla.socialSkills + gorilla.agility + gorilla.endurance + gorilla.leadership}
@@ -205,6 +362,12 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
       position="absolute"
       w="full"
       h="full"
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!isHovered) {
+          setIsFlipped(false);
+        }
+      }}
       sx={{
         backfaceVisibility: 'hidden',
         background: rarityConfig[gorilla.rarity].gradient,
@@ -218,10 +381,18 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
           <Text fontSize="lg" fontWeight="bold" color="gray.800">
             {gorilla.name}
           </Text>
-          <Badge colorScheme={rarityConfig[gorilla.rarity].badge}>
-            Stage {gorilla.stage}
+          <Badge 
+            colorScheme={getStageColorScheme(gorilla.stage)}
+            display="flex"
+            alignItems="center"
+            gap={1}
+          >
+            <Star size={12} />
+            Stage {gorilla.stage + 1}
           </Badge>
         </HStack>
+
+        <EvolutionProgress stage={gorilla.stage} />
 
         <VStack w="full" spacing={3}>
           <StatBar label="Strength" value={gorilla.strength} color="red" />
@@ -240,11 +411,11 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
                 e.stopPropagation();
                 onEvolve(gorilla.id);
               }}
-              colorScheme="blue"
+              colorScheme={getStageColorScheme(gorilla.stage)}
               size="sm"
               flex={1}
             >
-              Evolve
+              Evolve to {getStageInfo(gorilla.stage + 1).name}
             </Button>
           )}
           <Button
@@ -291,13 +462,44 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
         w="full"
         h="full"
         position="relative"
-        sx={{
+        onMouseMove={handleMouseMove}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          rotateX: rotateXSpring,
+          rotateY: rotateYSpring,
           transformStyle: 'preserve-3d'
         }}
         animate={{ rotateY: isFlipped ? 180 : 0 }}
         transition={{ duration: 0.6 }}
         onClick={handleClick}
+        whileHover={{ scale: 1.02 }}
       >
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          pointerEvents="none"
+          overflow="hidden"
+          borderRadius="xl"
+          sx={{
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: '-100%',
+              left: '-100%',
+              right: '-100%',
+              bottom: '-100%',
+              background: 'linear-gradient(45deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%)',
+              transform: 'rotate(45deg)',
+              transition: 'all 0.3s ease',
+              opacity: isHovered ? 1 : 0,
+              zIndex: 1
+            }
+          }}
+        />
         {cardFront}
         {cardBack}
       </MotionBox>
