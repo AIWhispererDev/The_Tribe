@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
-import { Box, Container, Flex, Text, VStack, HStack, Badge, Tooltip, useColorModeValue, useToast, Grid } from '@chakra-ui/react';
-import { Coins, Trophy, Info } from 'lucide-react';
+import { Box, Container, Heading, Text, VStack, HStack, Button, Grid, keyframes, useToast } from '@chakra-ui/react';
+import { Share2, PlayCircle, Coins, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GorillaCard from './GorillaCard';
 
@@ -32,6 +32,44 @@ const PERFECT_TRIBE = {
 };
 
 const RARITY_SCORES = { common: 1, rare: 2, epic: 3, legendary: 4 };
+
+const floatAnimation = keyframes`
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+`;
+
+const twinkleAnimation = keyframes`
+  0% { opacity: 0.2; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.2; }
+`;
+
+const ConnectingLine = () => (
+  <Box
+    position="absolute"
+    height="2px"
+    width="100%"
+    left="50%"
+    top="50%"
+    transform="translateY(-50%)"
+    zIndex={0}
+    sx={{
+      background: 'linear-gradient(90deg, rgba(107, 75, 255, 0.3), rgba(107, 75, 255, 0.1))',
+      _before: {
+        content: '""',
+        position: 'absolute',
+        width: '10px',
+        height: '10px',
+        borderRadius: 'full',
+        bg: 'purple.400',
+        left: 0,
+        top: '50%',
+        transform: 'translateY(-50%)',
+      }
+    }}
+  />
+);
 
 const CryptoGorillaGame: React.FC = () => {
   const { account, signAndSubmitTransaction } = useWallet();
@@ -179,11 +217,14 @@ const CryptoGorillaGame: React.FC = () => {
           position="fixed"
           bottom="4"
           right="4"
-          bg="gray.800"
+          bg="whiteAlpha.100"
+          backdropFilter="blur(10px)"
           color="white"
-          px="4"
-          py="2"
-          borderRadius="lg"
+          px="6"
+          py="3"
+          borderRadius="xl"
+          border="1px solid"
+          borderColor="whiteAlpha.200"
           boxShadow="lg"
           zIndex={1000}
         >
@@ -204,6 +245,9 @@ const CryptoGorillaGame: React.FC = () => {
       duration: type === 'pending' ? null : 5000,
       isClosable: true,
       position: 'bottom-right',
+      variant: 'solid',
+      bg: type === 'pending' ? 'yellow.400' : type === 'success' ? 'green.400' : 'red.400',
+      color: 'white',
     });
   };
 
@@ -318,115 +362,143 @@ const CryptoGorillaGame: React.FC = () => {
   };
 
   return (
-    <Box
-      minH="100vh"
-      bg="black"
+    <Box 
+      minH="100vh" 
+      bg="black" 
       position="relative"
       overflow="hidden"
-      py={8}
+      sx={{
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'radial-gradient(circle at center, rgba(107, 75, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%)',
+          pointerEvents: 'none',
+        }
+      }}
+      py={12}
     >
-      <Container maxW="container.2xl" position="relative">
-        <VStack spacing={8} w="full">
-          {/* Stats Bar */}
-          <Flex
-            w="full"
-            justify="space-between"
-            align="center"
-            bg="whiteAlpha.100"
-            backdropFilter="blur(10px)"
-            p={4}
-            borderRadius="xl"
-            border="1px solid"
-            borderColor="whiteAlpha.200"
+      {/* Animated stars background */}
+      {[...Array(50)].map((_, i) => (
+        <Box
+          key={i}
+          position="absolute"
+          width="2px"
+          height="2px"
+          bg="white"
+          borderRadius="full"
+          top={`${Math.random() * 100}%`}
+          left={`${Math.random() * 100}%`}
+          animation={`${twinkleAnimation} ${2 + Math.random() * 3}s infinite`}
+          opacity={0.2}
+        />
+      ))}
+
+      <Container maxW="container.xl">
+        <VStack spacing={12} align="center">
+          <Box
+            animation={`${floatAnimation} 6s ease-in-out infinite`}
           >
-            <HStack spacing={6}>
-              <HStack>
-                <Coins size={24} color="yellow.400" />
-                <VStack align="start" spacing={0}>
-                  <Text color="gray.400" fontSize="sm">Banana Tokens</Text>
-                  <Text color="white" fontSize="xl" fontWeight="bold">
-                    {bananaTokens}
-                  </Text>
-                </VStack>
-              </HStack>
-
-              <HStack>
-                <Trophy size={24} color="purple.400" />
-                <VStack align="start" spacing={0}>
-                  <Text color="gray.400" fontSize="sm">Tribe Score</Text>
-                  <Text 
-                    color="white" 
-                    fontSize="xl" 
-                    fontWeight="bold"
-                    bgGradient="linear(to-r, purple.400, blue.400)"
-                    bgClip="text"
-                  >
-                    {tribeScore}%
-                  </Text>
-                </VStack>
-              </HStack>
-            </HStack>
-
-            <Tooltip 
-              label="Burn a gorilla to receive 50 Banana Tokens" 
-              placement="top"
+            <Heading 
+              color="white" 
+              fontSize={{ base: "4xl", md: "5xl", lg: "6xl" }}
+              textAlign="center"
+              mb={4}
+              bgGradient="linear(to-r, white, purple.400)"
+              bgClip="text"
+              letterSpacing="tight"
             >
-              <Box cursor="pointer">
-                <Info size={20} color="gray.400" />
-              </Box>
-            </Tooltip>
-          </Flex>
+              Build your ultimate{' '}
+              <Text as="span" color="gray.400">
+                gorilla tribe
+              </Text>
+            </Heading>
+          </Box>
+
+          {/* Stats Bar */}
+          <HStack spacing={4}>
+            <Button
+              leftIcon={<Coins />}
+              bg="white"
+              color="black"
+              _hover={{ bg: 'gray.100', transform: 'translateY(-2px)' }}
+              _active={{ transform: 'translateY(0)' }}
+              size="lg"
+              px={8}
+              transition="all 0.2s"
+            >
+              {bananaTokens} Banana Tokens
+            </Button>
+            <Button
+              leftIcon={<Trophy />}
+              variant="outline"
+              color="white"
+              borderColor="purple.400"
+              _hover={{ bg: 'whiteAlpha.100', transform: 'translateY(-2px)' }}
+              _active={{ transform: 'translateY(0)' }}
+              size="lg"
+              px={8}
+              transition="all 0.2s"
+            >
+              Tribe Score: {tribeScore}%
+            </Button>
+          </HStack>
 
           {/* Cards Grid */}
-          <Grid
-            templateColumns="repeat(5, minmax(200px, 1fr))"
-            gap={6}
-            w="full"
-            alignItems="stretch"
-          >
-            {tribe.map((gorilla, index) => (
-              <Box
-                key={gorilla ? gorilla.id : `empty-${index}`}
-                position="relative"
-              >
-                <GorillaCard 
-                  gorilla={gorilla}
-                  onMint={() => mintGorilla(index)}
-                  onEvolve={evolveGorilla}
-                  onBurn={burnGorilla}
-                  score={gorilla ? calculateGorillaScore(gorilla) : 0}
-                  isRecommendedBurn={gorilla === getRecommendedBurn()}
-                />
-              </Box>
-            ))}
-          </Grid>
+          <Box position="relative" w="full" mt={8}>
+            <Grid
+              templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)' }}
+              gap={8}
+              w="full"
+              position="relative"
+            >
+              {tribe.map((gorilla, index) => (
+                <Box key={gorilla ? gorilla.id : `empty-${index}`} position="relative">
+                  {index < tribe.length - 1 && (
+                    <ConnectingLine />
+                  )}
+                  <Box position="relative" zIndex={1}>
+                    <GorillaCard 
+                      gorilla={gorilla}
+                      onMint={() => mintGorilla(index)}
+                      onEvolve={evolveGorilla}
+                      onBurn={burnGorilla}
+                      score={gorilla ? calculateGorillaScore(gorilla) : 0}
+                      isRecommendedBurn={gorilla === getRecommendedBurn()}
+                    />
+                  </Box>
+                </Box>
+              ))}
+            </Grid>
+          </Box>
 
           {/* Tips Section */}
           <Box
             w="full"
-            bg="whiteAlpha.100"
+            bg="whiteAlpha.50"
             backdropFilter="blur(10px)"
-            p={4}
+            p={6}
             borderRadius="xl"
             border="1px solid"
-            borderColor="whiteAlpha.200"
+            borderColor="whiteAlpha.100"
           >
             <VStack align="start" spacing={3}>
-              <Text color="gray.300">
+              <Text color="gray.300" fontSize="lg">
                 💡 Tip: Burning a gorilla will give you 50 Banana Tokens to mint a new one.
               </Text>
               {getRecommendedBurn() && (
-                <HStack>
-                  <Badge colorScheme="red">Recommendation</Badge>
-                  <Text color="gray.300">
-                    Consider burning {getRecommendedBurn()?.name} (Score: {calculateGorillaScore(getRecommendedBurn()!).toFixed(2)})
-                  </Text>
-                </HStack>
+                <Text color="gray.300" fontSize="lg">
+                  🔥 Consider burning {getRecommendedBurn()?.name} (Score: {calculateGorillaScore(getRecommendedBurn()!).toFixed(2)})
+                </Text>
               )}
             </VStack>
           </Box>
         </VStack>
       </Container>
+
       <AnimatePresence>
         <TransactionFeedback status={transactionStatus} />
       </AnimatePresence>
