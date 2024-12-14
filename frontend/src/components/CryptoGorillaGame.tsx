@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
-import { Box, Container, Flex, Text, VStack, HStack, Badge, Tooltip, useColorModeValue, useToast } from '@chakra-ui/react';
+import { Box, Container, Flex, Text, VStack, HStack, Badge, Tooltip, useColorModeValue, useToast, Grid } from '@chakra-ui/react';
 import { Coins, Trophy, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GorillaCard from './GorillaCard';
@@ -325,8 +325,8 @@ const CryptoGorillaGame: React.FC = () => {
       overflow="hidden"
       py={8}
     >
-      <Container maxW="container.xl" position="relative">
-        <VStack spacing={8}>
+      <Container maxW="container.2xl" position="relative">
+        <VStack spacing={8} w="full">
           {/* Stats Bar */}
           <Flex
             w="full"
@@ -378,34 +378,28 @@ const CryptoGorillaGame: React.FC = () => {
           </Flex>
 
           {/* Cards Grid */}
-          <Box w="full">
-            <Flex 
-              flexWrap="wrap" 
-              gap={6} 
-              justify="center"
-              sx={{
-                '& > div': {
-                  flex: '0 0 auto',
-                }
-              }}
-            >
-              {tribe.map((gorilla, index) => (
-                <Box
-                  key={gorilla ? gorilla.id : `empty-${index}`}
-                  position="relative"
-                >
-                  <GorillaCard 
-                    gorilla={gorilla}
-                    onMint={() => mintGorilla(index)}
-                    onEvolve={evolveGorilla}
-                    onBurn={burnGorilla}
-                    score={gorilla ? calculateGorillaScore(gorilla) : 0}
-                    isRecommendedBurn={gorilla === getRecommendedBurn()}
-                  />
-                </Box>
-              ))}
-            </Flex>
-          </Box>
+          <Grid
+            templateColumns="repeat(5, minmax(200px, 1fr))"
+            gap={6}
+            w="full"
+            alignItems="stretch"
+          >
+            {tribe.map((gorilla, index) => (
+              <Box
+                key={gorilla ? gorilla.id : `empty-${index}`}
+                position="relative"
+              >
+                <GorillaCard 
+                  gorilla={gorilla}
+                  onMint={() => mintGorilla(index)}
+                  onEvolve={evolveGorilla}
+                  onBurn={burnGorilla}
+                  score={gorilla ? calculateGorillaScore(gorilla) : 0}
+                  isRecommendedBurn={gorilla === getRecommendedBurn()}
+                />
+              </Box>
+            ))}
+          </Grid>
 
           {/* Tips Section */}
           <Box
