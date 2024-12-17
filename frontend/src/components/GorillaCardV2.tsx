@@ -65,6 +65,30 @@ const CardFace = ({ children, isBack = false }: { children: React.ReactNode, isB
   </Box>
 );
 
+const StatBar = ({ label, value, max = 10, color }: { label: string; value: number; max?: number; color: string }) => (
+  <Box w="full">
+    <HStack justify="space-between" mb={1}>
+      <Text fontSize="xs" color="gray.300">{label}</Text>
+      <Text fontSize="xs" color="gray.300">{value}/{max}</Text>
+    </HStack>
+    <Progress 
+      value={value} 
+      max={max} 
+      size="sm" 
+      borderRadius="full"
+      sx={{
+        '& > div': {
+          background: `linear-gradient(90deg, ${color}, ${color}88)`,
+          _hover: {
+            background: `linear-gradient(90deg, ${color}88, ${color})`
+          }
+        }
+      }}
+      bg="whiteAlpha.200"
+    />
+  </Box>
+);
+
 const CardFrame = ({ children, isShiny }: { children: React.ReactNode, isShiny?: boolean }) => (
   <Box
     position="relative"
@@ -72,7 +96,9 @@ const CardFrame = ({ children, isShiny }: { children: React.ReactNode, isShiny?:
     p="2px"
     h="full"
     sx={{
-      background: `linear-gradient(135deg, ${theme.cardFrameLight}, ${theme.cardFrame})`,
+      // Outer frame gradient
+      background: `linear-gradient(135deg, #E8D8F3 0%, #B088C9 100%)`,
+      boxShadow: '0 2px 7px rgba(0,0,0,0.15)',
       '&::before': {
         content: '""',
         position: 'absolute',
@@ -81,31 +107,40 @@ const CardFrame = ({ children, isShiny }: { children: React.ReactNode, isShiny?:
         padding: '2px',
         background: isShiny 
           ? 'linear-gradient(45deg, #ffd700, #ff69b4, #4169e1, #ffd700)'
-          : 'linear-gradient(45deg, #ffffff33, #ffffff00)',
+          : 'linear-gradient(45deg, #ffffff66, #ffffff33)',
         backgroundSize: '200% 100%',
         WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
         WebkitMaskComposite: 'xor',
         maskComposite: 'exclude',
         animation: isShiny ? `${shineAnimation} 2s linear infinite` : 'none',
+      },
+      // Inner frame gradient
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        inset: '2px',
+        borderRadius: '10px',
+        background: `linear-gradient(160deg, 
+          #E8D8F3 0%, 
+          #D4B8E8 35%,
+          #C9A3E1 65%,
+          #B088C9 100%
+        )`,
+        opacity: 0.9,
       }
     }}
   >
+    {/* Card content area */}
     <Box
-      bg={`linear-gradient(135deg, ${theme.cardInner} 0%, ${theme.cardFrameLight} 100%)`}
+      position="relative"
+      zIndex={1}
+      bg="white"
       borderRadius="10px"
       p="8px"
-      position="relative"
-      h="full"
-      sx={{
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '10px',
-          background: 'radial-gradient(circle at 50% 50%, #ffffff33, #ffffff00)',
-          opacity: 0.5,
-        }
-      }}
+      mx="8px"
+      my="8px"
+      h="calc(100% - 16px)"
+      boxShadow="inset 0 0 5px rgba(0,0,0,0.1)"
     >
       {children}
     </Box>
@@ -137,31 +172,6 @@ const PowerSection = ({ power, score }: { power: string, score: number }) => (
     </Text>
   </Box>
 );
-
-const StatsBack = ({ gorilla }: { gorilla: GorillaCardProps['gorilla'] }) => {
-  if (!gorilla) return null;
-  
-  return (
-    <VStack spacing={2} p={4} h="full" bg={`rgba(176, 136, 201, 0.1)`}>
-      <Text fontSize="xl" fontWeight="bold" color={theme.titleText} mb={4}>
-        Stats
-      </Text>
-      {[
-        { label: 'Strength', value: gorilla.strength },
-        { label: 'Intelligence', value: gorilla.intelligence },
-        { label: 'Social Skills', value: gorilla.socialSkills },
-        { label: 'Agility', value: gorilla.agility },
-        { label: 'Endurance', value: gorilla.endurance },
-        { label: 'Leadership', value: gorilla.leadership },
-      ].map(({ label, value }) => (
-        <HStack key={label} w="full" justify="space-between">
-          <Text color={theme.powerText} fontSize="sm">{label}</Text>
-          <Text color={theme.titleText} fontWeight="bold" fontSize="sm">{value}</Text>
-        </HStack>
-      ))}
-    </VStack>
-  );
-};
 
 const CardWrapper = ({ children, onClick }: { children: React.ReactNode, onClick?: (e: React.MouseEvent) => void }) => (
   <Box
@@ -228,7 +238,10 @@ export default function GorillaCardV2({ gorilla, onMint, onEvolve, onBurn, score
             rotateY: isFlipped ? 180 : 0,
             scale: 1
           }}
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ 
+            scale: 1.02,
+            transition: { duration: 0.2 }
+          }}
           transition={{ 
             duration: 0.6,
             type: "spring",
@@ -239,93 +252,123 @@ export default function GorillaCardV2({ gorilla, onMint, onEvolve, onBurn, score
           {/* Front of card */}
           <CardFace>
             <CardFrame isShiny={isShiny}>
-              {/* Header */}
-              <Box position="relative" mb="4px" h="28px">
-                <Text fontSize="10px" color={theme.powerText} position="absolute" left="2px" top="2px">
-                  {stageText}
-                </Text>
-                <Text fontSize="md" fontWeight="bold" textAlign="center" color={theme.titleText} mt="2px">
-                  {gorilla.name}
-                </Text>
-                <HStack position="absolute" right="2px" top="2px" spacing="1px">
-                  <Text fontSize="xs" fontWeight="bold" color={theme.titleText}>
-                    {rarityHP} HP
+              <VStack spacing={3} h="full">
+                {/* Header */}
+                <Box position="relative" w="full" h="24px">
+                  <Text 
+                    fontSize="10px" 
+                    color={theme.powerText} 
+                    position="absolute" 
+                    left="0" 
+                    top="0"
+                    fontStyle="italic"
+                  >
+                    {stageText}
                   </Text>
-                  <EnergySymbol color={theme.energyPurple} />
-                </HStack>
-              </Box>
+                  <Text 
+                    fontSize="md" 
+                    fontWeight="bold" 
+                    textAlign="center" 
+                    color={theme.titleText}
+                    mt="-2px"
+                  >
+                    {gorilla.name}
+                  </Text>
+                  <HStack position="absolute" right="0" top="0" spacing="1px">
+                    <Text fontSize="xs" fontWeight="bold" color={theme.titleText}>
+                      {rarityHP} HP
+                    </Text>
+                    <EnergySymbol color={theme.energyPurple} />
+                  </HStack>
+                </Box>
 
-              {/* Image */}
-              <Box
-                position="relative"
-                bg={theme.frameYellow}
-                border="1px solid black"
-                mb="4px"
-                h="140px"
-                overflow="hidden"
-              >
-                <Image
-                  src={`/gorilla-${gorilla.stage}.png`}
-                  alt={gorilla.name}
-                  objectFit="cover"
+                {/* Image */}
+                <Box
+                  position="relative"
+                  bg={theme.frameYellow}
+                  border="1px solid black"
                   w="full"
-                  h="full"
-                />
-              </Box>
+                  h="140px"
+                  overflow="hidden"
+                  borderRadius="4px"
+                >
+                  <Image
+                    src={`/gorilla-${gorilla.stage}.png`}
+                    alt={gorilla.name}
+                    objectFit="cover"
+                    w="full"
+                    h="full"
+                  />
+                </Box>
 
-              {/* Character Info */}
-              <Text fontSize="10px" color={theme.powerText} mb="4px" textAlign="center">
-                {gorilla.rarity.charAt(0).toUpperCase() + gorilla.rarity.slice(1)} Gorilla · Stage {gorilla.stage + 1}
-              </Text>
-
-              {/* Powers */}
-              <PowerSection power="Diamond Force" score={score} />
-              <PowerSection power="Gorilla Strength" score={score * 0.5} />
-
-              {/* Stats */}
-              <HStack justify="space-between" p="4px" bg={`rgba(176, 136, 201, 0.2)`}>
-                <HStack spacing={1}>
-                  <Circle size="16px" bg={theme.energyPurple} />
-                  <Text fontWeight="bold" fontSize="xs">STR {gorilla.strength}</Text>
-                </HStack>
-                <HStack spacing={1}>
-                  <Circle size="16px" bg={theme.energyYellow} />
-                  <Text fontWeight="bold" fontSize="xs">DEF +{gorilla.endurance}</Text>
-                </HStack>
-              </HStack>
-
-              {/* Progress Bar */}
-              <Box mt="4px" mb="2px">
-                <Progress 
-                  value={Math.min(100, (score * 1000) / 10)} 
-                  size="xs" 
-                  colorScheme="purple" 
-                  borderRadius="full"
-                />
-              </Box>
-
-              {/* Footer */}
-              <HStack justify="space-between" px="2px">
-                <Text fontSize="8px" color={theme.powerText}>
-                  GORILLA COLLECTION #{gorilla.id.slice(0, 4)}
+                {/* Character Info */}
+                <Text fontSize="10px" color={theme.powerText} textAlign="center">
+                  {gorilla.rarity.charAt(0).toUpperCase() + gorilla.rarity.slice(1)} Gorilla · Stage {gorilla.stage + 1}
                 </Text>
-                <Text fontSize="8px" color={theme.powerText}>
-                  ◇ {Math.floor(score * 1000)}/1000
-                </Text>
-              </HStack>
+
+                {/* Powers */}
+                <PowerSection power="Diamond Force" score={score} />
+                <PowerSection power="Gorilla Strength" score={score * 0.5} />
+
+                {/* Stats */}
+                <HStack justify="space-between" p="4px" bg={`rgba(176, 136, 201, 0.2)`} w="full">
+                  <HStack spacing={1}>
+                    <Circle size="16px" bg={theme.energyPurple} />
+                    <Text fontWeight="bold" fontSize="xs">STR {gorilla.strength}</Text>
+                  </HStack>
+                  <HStack spacing={1}>
+                    <Circle size="16px" bg={theme.energyYellow} />
+                    <Text fontWeight="bold" fontSize="xs">DEF +{gorilla.endurance}</Text>
+                  </HStack>
+                </HStack>
+
+                {/* Footer */}
+                <HStack justify="space-between" w="full" mt="auto" px="2px">
+                  <Text fontSize="8px" color={theme.powerText}>
+                    GORILLA COLLECTION #{gorilla.id.slice(0, 4)}
+                  </Text>
+                  <Text fontSize="8px" color={theme.powerText}>
+                    ◇ {Math.floor(score * 1000)}/1000
+                  </Text>
+                </HStack>
+              </VStack>
             </CardFrame>
           </CardFace>
 
           {/* Back of card */}
           <CardFace isBack>
             <CardFrame isShiny={isShiny}>
-              <StatsBack gorilla={gorilla} />
+              <VStack spacing={4} h="full" p={2}>
+                <Text 
+                  fontSize="lg" 
+                  fontWeight="bold" 
+                  color={theme.titleText}
+                  textAlign="center"
+                  w="full"
+                  borderBottom="2px solid"
+                  borderColor="gray.200"
+                  pb={2}
+                >
+                  Stats
+                </Text>
+                <VStack w="full" spacing={3}>
+                  <StatBar label="Strength" value={gorilla.strength} color={theme.energyPurple} />
+                  <StatBar label="Intelligence" value={gorilla.intelligence} color={theme.energyPurple} />
+                  <StatBar label="Social Skills" value={gorilla.socialSkills} color={theme.energyPurple} />
+                  <StatBar label="Agility" value={gorilla.agility} color={theme.energyPurple} />
+                  <StatBar label="Endurance" value={gorilla.endurance} color={theme.energyPurple} />
+                  <StatBar label="Leadership" value={gorilla.leadership} color={theme.energyPurple} />
+                </VStack>
+                <Text color="gray.400" fontSize="sm" mt="auto" textAlign="center">
+                  Click to see front →
+                </Text>
+              </VStack>
             </CardFrame>
           </CardFace>
         </motion.div>
       </CardWrapper>
 
-      {/* Action Buttons - Now inside a container that's part of the card */}
+      {/* Action Buttons */}
       <Box 
         position="absolute" 
         bottom="-40px" 
@@ -334,6 +377,7 @@ export default function GorillaCardV2({ gorilla, onMint, onEvolve, onBurn, score
         bg={`linear-gradient(to bottom, ${theme.cardFrame}CC, ${theme.cardFrame})`}
         borderRadius="0 0 12px 12px"
         p="2"
+        boxShadow="0 2px 4px rgba(0,0,0,0.1)"
       >
         <HStack 
           justify="center" 
