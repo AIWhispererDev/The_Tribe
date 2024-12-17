@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
-import { Box, Container, Heading, Text, VStack, HStack, Grid, keyframes, useToast, Icon } from '@chakra-ui/react';
+import { Box, Container, Heading, Text, VStack, HStack, Grid, keyframes, useToast, Icon, Button } from '@chakra-ui/react';
 import { Coins, Trophy, Star, Leaf, TreePine, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GorillaCard from './GorillaCard';
+import PokemonStyleCard from './GorillaCardV2';
 import { Particles } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Engine } from "@tsparticles/engine";
@@ -482,6 +483,7 @@ const CryptoGorillaGame: React.FC = () => {
   const [bananaTokens, setBananaTokens] = useState(0);
   const [tribeScore, setTribeScore] = useState(0);
   const [showEvolution, setShowEvolution] = useState(false);
+  const [useNewCardStyle, setUseNewCardStyle] = useState(false);
 
   const particlesInit = useCallback(async (engine: Engine) => {
     await loadSlim(engine);
@@ -708,40 +710,18 @@ const CryptoGorillaGame: React.FC = () => {
 
   return (
     <ParallaxBackground>
-      <Container maxW="container.xl">
-        <VStack spacing={12} align="center">
-          <Box
-            position="relative"
-            animation={`${floatAnimation} 6s ease-in-out infinite`}
-            _before={{
-              content: '""',
-              position: "absolute",
-              top: "-20px",
-              left: "-20px",
-              right: "-20px",
-              bottom: "-20px",
-              background: "linear-gradient(45deg, rgba(229, 255, 68, 0.1), rgba(107, 75, 255, 0.1))",
-              borderRadius: "xl",
-              filter: "blur(20px)",
-              zIndex: -1,
-            }}
-          >
-            <Heading 
-              color="white" 
-              fontSize={{ base: "4xl", md: "5xl", lg: "6xl" }}
-              textAlign="center"
-              mb={4}
-              bgGradient="linear(to-r, #E5FF44, #6B4BFF)"
-              bgClip="text"
-              letterSpacing="tight"
-              textShadow="0 0 20px rgba(229, 255, 68, 0.3)"
+      <Container maxW="container.xl" py={8}>
+        <VStack spacing={8} align="stretch">
+          <HStack justify="space-between">
+            <Text color="white" fontSize="2xl">Your Gorilla Tribe</Text>
+            <Button
+              onClick={() => setUseNewCardStyle(!useNewCardStyle)}
+              variant="outline"
+              colorScheme="purple"
             >
-              Build your ultimate{' '}
-              <Text as="span" color="#2A4C3B">
-                gorilla tribe
-              </Text>
-            </Heading>
-          </Box>
+              {useNewCardStyle ? 'Classic Style' : 'Pokemon Style'}
+            </Button>
+          </HStack>
 
           <TribalContainer>
             <HStack spacing={8} justify="center" wrap="wrap">
@@ -814,14 +794,25 @@ const CryptoGorillaGame: React.FC = () => {
                     }}
                   >
                     <Box position="relative" zIndex={1}>
-                      <GorillaCard 
-                        gorilla={gorilla}
-                        onMint={() => mintGorilla(index)}
-                        onEvolve={() => gorilla && evolveGorilla(gorilla.id)}
-                        onBurn={() => gorilla && burnGorilla(gorilla.id)}
-                        score={gorilla ? calculateGorillaScore(gorilla) : 0}
-                        isRecommendedBurn={gorilla === getRecommendedBurn()}
-                      />
+                      {useNewCardStyle ? (
+                        <PokemonStyleCard
+                          gorilla={gorilla}
+                          onMint={() => mintGorilla(index)}
+                          onEvolve={() => gorilla && evolveGorilla(gorilla.id)}
+                          onBurn={() => gorilla && burnGorilla(gorilla.id)}
+                          score={gorilla ? calculateGorillaScore(gorilla) : 0}
+                          isRecommendedBurn={gorilla === getRecommendedBurn()}
+                        />
+                      ) : (
+                        <GorillaCard 
+                          gorilla={gorilla}
+                          onMint={() => mintGorilla(index)}
+                          onEvolve={() => gorilla && evolveGorilla(gorilla.id)}
+                          onBurn={() => gorilla && burnGorilla(gorilla.id)}
+                          score={gorilla ? calculateGorillaScore(gorilla) : 0}
+                          isRecommendedBurn={gorilla === getRecommendedBurn()}
+                        />
+                      )}
                     </Box>
                   </Box>
                 </Box>
