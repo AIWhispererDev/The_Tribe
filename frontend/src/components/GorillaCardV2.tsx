@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Box, Text, HStack, VStack, Circle, Image, Button, Progress, keyframes } from '@chakra-ui/react';
+import { Box, Text, HStack, VStack, Circle, Image, Button, Progress, keyframes, Divider } from '@chakra-ui/react';
 
 // Keyframes for shine effect
 const shineAnimation = keyframes`
@@ -130,13 +130,12 @@ const CardFrame = ({ children, isShiny }: { children: React.ReactNode, isShiny?:
       }
     }}
   >
-    {/* Card content area */}
     <Box
       position="relative"
       zIndex={1}
       bg="white"
       borderRadius="10px"
-      p="8px"
+      p="12px"
       mx="8px"
       my="8px"
       h="calc(100% - 16px)"
@@ -158,7 +157,7 @@ const getStageEvolution = (stage: number) => {
 };
 
 const PowerSection = ({ power, score }: { power: string, score: number }) => (
-  <Box bg={`rgba(176, 136, 201, 0.2)`} p="6px" mb="6px">
+  <Box p="6px">
     <HStack mb="2px" spacing={1}>
       <EnergySymbol color={theme.energyPurple} />
       <EnergySymbol color={theme.energyPurple} />
@@ -167,9 +166,16 @@ const PowerSection = ({ power, score }: { power: string, score: number }) => (
         {power}
       </Text>
     </HStack>
-    <Text color={theme.powerText} fontSize="xs" lineHeight="1.2">
-      This gorilla's diamond hands grant +{Math.floor(score * 100)} Attack and +{Math.floor(score * 50)} Wealth.
-    </Text>
+    <Box
+      bg={`rgba(176, 136, 201, 0.2)`}
+      p="4px"
+      borderRadius="sm"
+      mt="2px"
+    >
+      <Text color={theme.powerText} fontSize="xs" lineHeight="1.2">
+        This gorilla's diamond hands grant +{Math.floor(score * 100)} Attack and +{Math.floor(score * 50)} Wealth.
+      </Text>
+    </Box>
   </Box>
 );
 
@@ -191,17 +197,93 @@ export default function GorillaCardV2({ gorilla, onMint, onEvolve, onBurn, score
 
   if (!gorilla) {
     return (
-      <Box
-        bg={theme.cardFrame}
-        borderRadius="12px"
-        p="16px"
-        textAlign="center"
-        onClick={onMint}
-        cursor="pointer"
-        _hover={{ transform: 'scale(1.02)' }}
-        transition="transform 0.2s"
-      >
-        <Text color="white">Click to Mint</Text>
+      <Box position="relative" w="full" maxW="300px" mx="auto" h="450px">
+        <CardFrame isShiny={false}>
+          <VStack spacing={2} h="full" align="stretch">
+            {/* Header */}
+            <Box position="relative" w="full" minH="28px" mb={1}>
+              <Text 
+                fontSize="md" 
+                fontWeight="bold" 
+                textAlign="center" 
+                color={theme.titleText}
+                mt="8px"
+              >
+                Empty Slot
+              </Text>
+              <HStack position="absolute" right="0" top="0" spacing="1px">
+                <Text fontSize="xs" fontWeight="bold" color={theme.titleText}>
+                  0 HP
+                </Text>
+                <EnergySymbol color={theme.energyPurple} />
+              </HStack>
+            </Box>
+
+            <Divider borderColor="gray.300" />
+
+            {/* Image */}
+            <Box
+              position="relative"
+              bg={theme.frameYellow}
+              border="1px solid black"
+              w="full"
+              h="140px"
+              overflow="hidden"
+              borderRadius="4px"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Button
+                onClick={onMint}
+                colorScheme="purple"
+                size="sm"
+              >
+                Mint Gorilla
+              </Button>
+            </Box>
+
+            <Divider borderColor="gray.300" />
+
+            {/* Character Info */}
+            <Text fontSize="10px" color={theme.powerText} textAlign="center">
+              Click to mint a new gorilla
+            </Text>
+
+            <Divider borderColor="gray.300" />
+
+            {/* Empty Powers */}
+            <Box p="6px">
+              <Text color={theme.powerText} fontSize="xs">
+                No powers available
+              </Text>
+            </Box>
+
+            <Divider borderColor="gray.300" />
+
+            {/* Empty Stats */}
+            <HStack justify="space-between" p="4px" bg={`rgba(176, 136, 201, 0.2)`} w="full">
+              <HStack spacing={1}>
+                <Circle size="16px" bg={theme.energyPurple} />
+                <Text fontWeight="bold" fontSize="xs">STR 0</Text>
+              </HStack>
+              <HStack spacing={1}>
+                <Circle size="16px" bg={theme.energyYellow} />
+                <Text fontWeight="bold" fontSize="xs">DEF +0</Text>
+              </HStack>
+            </HStack>
+
+            {/* Footer */}
+            <HStack justify="space-between" w="full" mt="auto" px="2px">
+              <Text fontSize="8px" color={theme.powerText}>
+                GORILLA COLLECTION
+              </Text>
+              <Text fontSize="8px" color={theme.powerText}>
+                ◇ 0/1000
+              </Text>
+            </HStack>
+          </VStack>
+        </CardFrame>
       </Box>
     );
   }
@@ -252,9 +334,9 @@ export default function GorillaCardV2({ gorilla, onMint, onEvolve, onBurn, score
           {/* Front of card */}
           <CardFace>
             <CardFrame isShiny={isShiny}>
-              <VStack spacing={3} h="full">
+              <VStack spacing={2} h="full" align="stretch">
                 {/* Header */}
-                <Box position="relative" w="full" h="24px">
+                <Box position="relative" w="full" minH="28px" mb={1}>
                   <Text 
                     fontSize="10px" 
                     color={theme.powerText} 
@@ -270,7 +352,7 @@ export default function GorillaCardV2({ gorilla, onMint, onEvolve, onBurn, score
                     fontWeight="bold" 
                     textAlign="center" 
                     color={theme.titleText}
-                    mt="-2px"
+                    mt="8px"
                   >
                     {gorilla.name}
                   </Text>
@@ -281,6 +363,8 @@ export default function GorillaCardV2({ gorilla, onMint, onEvolve, onBurn, score
                     <EnergySymbol color={theme.energyPurple} />
                   </HStack>
                 </Box>
+
+                <Divider borderColor="gray.300" />
 
                 {/* Image */}
                 <Box
@@ -301,14 +385,20 @@ export default function GorillaCardV2({ gorilla, onMint, onEvolve, onBurn, score
                   />
                 </Box>
 
+                <Divider borderColor="gray.300" />
+
                 {/* Character Info */}
                 <Text fontSize="10px" color={theme.powerText} textAlign="center">
                   {gorilla.rarity.charAt(0).toUpperCase() + gorilla.rarity.slice(1)} Gorilla · Stage {gorilla.stage + 1}
                 </Text>
 
+                <Divider borderColor="gray.300" />
+
                 {/* Powers */}
                 <PowerSection power="Diamond Force" score={score} />
                 <PowerSection power="Gorilla Strength" score={score * 0.5} />
+
+                <Divider borderColor="gray.300" />
 
                 {/* Stats */}
                 <HStack justify="space-between" p="4px" bg={`rgba(176, 136, 201, 0.2)`} w="full">
@@ -338,20 +428,21 @@ export default function GorillaCardV2({ gorilla, onMint, onEvolve, onBurn, score
           {/* Back of card */}
           <CardFace isBack>
             <CardFrame isShiny={isShiny}>
-              <VStack spacing={4} h="full" p={2}>
+              <VStack spacing={3} h="full" align="stretch">
                 <Text 
                   fontSize="lg" 
                   fontWeight="bold" 
                   color={theme.titleText}
                   textAlign="center"
                   w="full"
-                  borderBottom="2px solid"
-                  borderColor="gray.200"
                   pb={2}
                 >
                   Stats
                 </Text>
-                <VStack w="full" spacing={3}>
+
+                <Divider borderColor="gray.300" />
+
+                <VStack w="full" spacing={3} flex={1}>
                   <StatBar label="Strength" value={gorilla.strength} color={theme.energyPurple} />
                   <StatBar label="Intelligence" value={gorilla.intelligence} color={theme.energyPurple} />
                   <StatBar label="Social Skills" value={gorilla.socialSkills} color={theme.energyPurple} />
@@ -359,56 +450,39 @@ export default function GorillaCardV2({ gorilla, onMint, onEvolve, onBurn, score
                   <StatBar label="Endurance" value={gorilla.endurance} color={theme.energyPurple} />
                   <StatBar label="Leadership" value={gorilla.leadership} color={theme.energyPurple} />
                 </VStack>
-                <Text color="gray.400" fontSize="sm" mt="auto" textAlign="center">
-                  Click to see front →
-                </Text>
+
+                <Divider borderColor="gray.300" />
+
+                {/* Action Buttons */}
+                <HStack 
+                  justify="center" 
+                  spacing={2}
+                  onClick={e => e.stopPropagation()}
+                  pb={2}
+                >
+                  {gorilla.stage < 3 && (
+                    <Button
+                      size="xs"
+                      colorScheme="purple"
+                      onClick={() => onEvolve(gorilla.id)}
+                    >
+                      Evolve
+                    </Button>
+                  )}
+                  <Button
+                    size="xs"
+                    colorScheme="red"
+                    variant="outline"
+                    onClick={() => onBurn(gorilla.id)}
+                  >
+                    Burn
+                  </Button>
+                </HStack>
               </VStack>
             </CardFrame>
           </CardFace>
         </motion.div>
       </CardWrapper>
-
-      {/* Action Buttons */}
-      <Box 
-        position="absolute" 
-        bottom="-40px" 
-        left="0" 
-        right="0" 
-        bg={`linear-gradient(to bottom, ${theme.cardFrame}CC, ${theme.cardFrame})`}
-        borderRadius="0 0 12px 12px"
-        p="2"
-        boxShadow="0 2px 4px rgba(0,0,0,0.1)"
-      >
-        <HStack 
-          justify="center" 
-          spacing={2}
-          onClick={e => e.stopPropagation()}
-        >
-          <Button
-            size="xs"
-            colorScheme="purple"
-            onClick={() => onEvolve(gorilla.id)}
-            isDisabled={gorilla.stage >= 3}
-          >
-            Evolve
-          </Button>
-          <Button
-            size="xs"
-            variant="outline"
-            onClick={() => setIsFlipped(!isFlipped)}
-          >
-            {isFlipped ? 'Front' : 'Stats'}
-          </Button>
-          <Button
-            size="xs"
-            colorScheme="red"
-            variant="outline"
-            onClick={() => onBurn(gorilla.id)}
-          >
-            Burn
-          </Button>
-        </HStack>
-      </Box>
     </Box>
   );
 } 
