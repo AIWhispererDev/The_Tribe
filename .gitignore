@@ -11,7 +11,8 @@ coverage/
 build/
 dist/
 out/
-
+docs/
+documentation/
 # Environment files
 .env
 .env.local

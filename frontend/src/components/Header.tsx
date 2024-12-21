@@ -1,7 +1,6 @@
 import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   Box,
-  Button,
   Container,
   Flex,
   HStack,
@@ -9,14 +8,13 @@ import {
   useBreakpointValue,
   Icon,
 } from '@chakra-ui/react';
-import { Menu, Wallet } from 'lucide-react';
-import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { Menu } from 'lucide-react';
+import WalletSelector from './WalletSelector';
 
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const { connect, account, connected, disconnect } = useWallet();
 
   const navItems = [
     { path: '/tribe', label: 'MY TRIBE' },
@@ -25,16 +23,24 @@ export default function Header() {
     { path: '/leaderboard', label: 'LEADERBOARD' },
   ];
 
-  const handleWalletClick = () => {
-    if (connected) {
-      disconnect();
-    } else {
-      connect();
-    }
-  };
-
   return (
-    <Box bg="blackAlpha.900" py={4}>
+    <Box 
+      bg="rgba(0, 0, 0, 0.9)"
+      borderBottom="1px solid"
+      borderColor="rgba(204, 255, 0, 0.2)"
+      backdropFilter="blur(10px)"
+      py={4}
+      position="relative"
+      _after={{
+        content: '""',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(204, 255, 0, 0.5), transparent)'
+      }}
+    >
       <Container maxW="container.xl">
         <Flex justify="space-between" align="center">
           <Link 
@@ -43,7 +49,11 @@ export default function Header() {
             fontSize="2xl"
             fontWeight="bold"
             color="#CCFF00"
-            _hover={{ textDecoration: 'none' }}
+            _hover={{ 
+              textDecoration: 'none',
+              textShadow: '0 0 10px rgba(204, 255, 0, 0.5)'
+            }}
+            transition="all 0.2s"
           >
             TRIBE
           </Link>
@@ -54,9 +64,16 @@ export default function Header() {
                 key={item.path}
                 as={RouterLink}
                 to={item.path}
-                color={location.pathname === item.path ? '#CCFF00' : 'white'}
-                _hover={{ color: '#CCFF00' }}
-                transition="colors 0.2s"
+                color={location.pathname === item.path ? '#CCFF00' : 'whiteAlpha.900'}
+                fontWeight="medium"
+                fontSize="sm"
+                letterSpacing="wide"
+                textTransform="uppercase"
+                _hover={{ 
+                  color: '#CCFF00',
+                  textShadow: '0 0 10px rgba(204, 255, 0, 0.5)'
+                }}
+                transition="all 0.2s"
               >
                 {item.label}
               </Link>
@@ -64,23 +81,21 @@ export default function Header() {
           </HStack>
 
           <HStack spacing={4}>
-            <Button
-              leftIcon={<Icon as={Wallet} />}
-              onClick={handleWalletClick}
-              colorScheme={connected ? 'green' : 'gray'}
-              variant="outline"
-            >
-              {connected ? 'Connected' : 'Connect Wallet'}
-            </Button>
+            <WalletSelector />
             {isMobile && (
-              <Button
+              <Box
+                as="button"
                 p={2}
-                variant="ghost"
                 color="white"
-                _hover={{ bg: 'whiteAlpha.200' }}
+                _hover={{ 
+                  bg: 'whiteAlpha.100',
+                  color: '#CCFF00'
+                }}
+                borderRadius="md"
+                transition="all 0.2s"
               >
                 <Icon as={Menu} boxSize={6} />
-              </Button>
+              </Box>
             )}
           </HStack>
         </Flex>
