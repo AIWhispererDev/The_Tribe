@@ -131,6 +131,24 @@ module crypto_gorilla::gorilla_game_module {
         table::upsert(&mut game.last_action, account_addr, timestamp::now_seconds());
     }
 
+    public entry fun burn_gorilla(account: &signer, gorilla_id: u64) acquires GorillaGame {
+        let account_addr = signer::address_of(account);
+        let game = borrow_global_mut<GorillaGame>(@crypto_gorilla);
+
+        assert!(table::contains(&game.gorillas, account_addr), ENOT_OWNER);
+        let tribe = table::borrow_mut(&mut game.gorillas, account_addr);
+        assert!(gorilla_id < vector::length(tribe), ENOT_OWNER);
+
+        // Remove the gorilla from the tribe
+        let gorilla_obj = vector::remove(tribe, gorilla_id);
+        
+        // Burn the gorilla token
+        token::burn(gorilla_obj);
+
+        // Update last action time
+        table::upsert(&mut game.last_action, account_addr, timestamp::now_seconds());
+    }
+
     #[view]
     public fun get_gorilla_info(gorilla: Object<token::Token>): (u8, u8, u8, u8) acquires GorillaNFT {
         let gorilla_data = borrow_global<GorillaNFT>(object::object_address(&gorilla));

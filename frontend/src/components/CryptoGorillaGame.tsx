@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
-import { Box, Container, Heading, Text, VStack, HStack, Grid, keyframes, useToast, Icon, Button } from '@chakra-ui/react';
+import { Box, Container, Text, VStack, HStack, Grid, keyframes, useToast, Icon, Button } from '@chakra-ui/react';
 import { Coins, Trophy, Star, Leaf, TreePine, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GorillaCard from './GorillaCard';
@@ -11,8 +11,9 @@ import { loadSlim } from "@tsparticles/slim";
 import type { Engine } from "@tsparticles/engine";
 import { TribalContainer, TribalButton, TribalDivider } from './TribalComponents';
 
-const CRYPTO_GORILLA_ADDRESS = "YOUR_CONTRACT_ADDRESS_HERE";
-const NODE_URL = "https://fullnode.testnet.aptoslabs.com";
+// Environment variables
+const CRYPTO_GORILLA_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x1";
+const NODE_URL = import.meta.env.VITE_NODE_URL || "https://fullnode.testnet.aptoslabs.com";
 const MAX_TRIBE_SIZE = 5;
 
 const client = new AptosClient(NODE_URL);
@@ -485,43 +486,60 @@ const CryptoGorillaGame: React.FC = () => {
   const [showEvolution, setShowEvolution] = useState(false);
   const [useNewCardStyle, setUseNewCardStyle] = useState(false);
 
-  const particlesInit = useCallback(async (engine: Engine) => {
-    await loadSlim(engine);
-  }, []);
-
   const fetchTribeData = async () => {
-    if (!account?.address) return;
+    if (!account?.address) {
+      console.log("No wallet connected");
+      return;
+    }
 
     try {
+      console.log("Fetching tribe data for address:", account.address);
+      console.log("Using contract address:", CRYPTO_GORILLA_ADDRESS);
+      
       const tribeResponse = await client.view({
         function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::get_tribe`,
         type_arguments: [],
         arguments: [account.address],
       });
 
+      console.log("Tribe response:", tribeResponse);
+
       const gorillaIds = tribeResponse[0] as string[];
       const detailedTribe = await Promise.all(gorillaIds.map(async (gorillaId: string) => {
+        console.log("Fetching info for gorilla:", gorillaId);
+        
         const info = await client.view({
           function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::get_gorilla_info`,
           type_arguments: [],
           arguments: [gorillaId],
         });
+        
+        console.log("Gorilla info:", info);
+        
+        // Map the on-chain data to our Gorilla interface
         return { 
           id: gorillaId, 
+          name: `${['Baby', 'Juvenile', 'Adult', 'Silverback'][Number(info[3])]} Gorilla`,
           strength: Number(info[0]), 
           intelligence: Number(info[1]), 
           socialSkills: Number(info[2]), 
           stage: Number(info[3]),
-          agility: 1,
-          endurance: 1,
-          leadership: 1,
-          name: 'Gorilla',
-          rarity: 'common' as const
+          agility: Number(info[4] || 1),
+          endurance: Number(info[5] || 1),
+          leadership: Number(info[6] || 1),
+          rarity: info[7] as 'common' | 'rare' | 'epic' | 'legendary'
         };
       }));
 
-      setTribe(detailedTribe);
+      // Pad the tribe array with nulls if needed
+      const paddedTribe = [...detailedTribe];
+      while (paddedTribe.length < MAX_TRIBE_SIZE) {
+        paddedTribe.push(null);
+      }
 
+      setTribe(paddedTribe);
+
+      // Update tribe score from chain
       const scoreResponse = await client.view({
         function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::calculate_tribe_score`,
         type_arguments: [],
@@ -529,8 +547,29 @@ const CryptoGorillaGame: React.FC = () => {
       });
       
       setTribeScore(Number(scoreResponse[0]));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching tribe data:", error);
+      
+      // More specific error messages based on the error type
+      let errorMessage = 'Failed to fetch tribe data.';
+      
+      if (error.message?.includes('Module not found')) {
+        errorMessage = 'Contract not found. Please check if the contract is deployed correctly.';
+      } else if (error.message?.includes('Function not found')) {
+        errorMessage = 'Contract function not found. Please check if the contract is up to date.';
+      } else if (error.message?.includes('Invalid arguments')) {
+        errorMessage = 'Invalid wallet address format.';
+      } else if (error.message?.includes('execution failed')) {
+        errorMessage = 'Contract execution failed. Please try again later.';
+      }
+      
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -576,115 +615,116 @@ const CryptoGorillaGame: React.FC = () => {
     }
 
     toast({
-      id: 'transaction-toast', // Use a consistent ID to prevent multiple toasts
+      id: 'transaction-toast',
       title: type === 'pending' ? 'Transaction Pending' : type === 'success' ? 'Success!' : 'Error!',
       description: message,
       status: type === 'pending' ? 'info' : type === 'success' ? 'success' : 'error',
-      duration: type === 'pending' ? 3000 : 2000, // Shorter durations
+      duration: type === 'pending' ? 3000 : 2000,
       isClosable: true,
       position: 'bottom-right',
       variant: 'solid',
-      bg: type === 'pending' ? 'yellow.400' : type === 'success' ? 'green.400' : 'red.400',
-      color: 'white',
     });
   };
 
   const mintGorilla = async (index: number) => {
-    // Clear any existing status first
-    setTransactionStatus(null);
     setTransactionStatus('pending');
     showTransactionToast('pending', 'Minting your new gorilla...');
     
     try {
-      const rarities = ['common', 'common', 'rare', 'rare', 'epic', 'legendary'];
-      const newGorilla: Gorilla = {
-        id: `gorilla-${Date.now()}`,
-        name: 'Baby Gorilla',
-        strength: 1,
-        intelligence: 1,
-        socialSkills: 1,
-        agility: 1,
-        endurance: 1,
-        leadership: 1,
-        stage: 0,
-        rarity: rarities[Math.floor(Math.random() * rarities.length)] as 'common' | 'rare' | 'epic' | 'legendary'
-      };
-
-      setTribe(prevTribe => {
-        const newTribe = [...prevTribe];
-        newTribe[index] = newGorilla;
-        return newTribe;
+      const response = await signAndSubmitTransaction({
+        data: {
+          function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::mint_gorilla`,
+          typeArguments: [],
+          functionArguments: []
+        }
       });
-
-      setBananaTokens(prev => prev + 10);
+      
+      await client.waitForTransaction(response.hash);
+      await fetchTribeData();
+      
       setTransactionStatus('success');
-      showTransactionToast('success', `Successfully minted a ${newGorilla.rarity} gorilla! You received 10 Banana Tokens.`);
-    } catch (error) {
+      showTransactionToast('success', 'Successfully minted a new gorilla!');
+    } catch (error: any) {
       console.error("Error minting gorilla:", error);
       setTransactionStatus('error');
-      showTransactionToast('error', 'Failed to mint gorilla. Please try again.');
+      let errorMessage = 'Failed to mint gorilla.';
+      if (error.message?.includes('ETRIBE_FULL')) {
+        errorMessage = 'Your tribe is full! Try burning a gorilla first.';
+      } else if (error.message?.includes('ENOT_ENOUGH_TIME_PASSED')) {
+        errorMessage = 'Please wait for the cooldown period to end before minting again.';
+      } else if (error.message?.includes('ENOT_ENOUGH_COINS')) {
+        errorMessage = 'Not enough APT tokens to mint a gorilla.';
+      }
+      showTransactionToast('error', errorMessage);
     } finally {
       setTimeout(() => setTransactionStatus(null), TRANSACTION_STATUS_TIMEOUT);
     }
   };
 
   const evolveGorilla = async (gorillaId: string) => {
-    // Clear any existing status first
-    setTransactionStatus(null);
     setTransactionStatus('pending');
     showTransactionToast('pending', 'Evolving your gorilla...');
 
     try {
-      setTribe(prevTribe => prevTribe.map(gorilla => {
-        if (gorilla && gorilla.id === gorillaId && gorilla.stage < 3) {
-          const newStage = gorilla.stage + 1;
-          return {
-            ...gorilla,
-            stage: newStage,
-            name: `${['Baby', 'Juvenile', 'Adult', 'Silverback'][newStage]} Gorilla`,
-            strength: gorilla.strength + 1,
-            intelligence: gorilla.intelligence + 1,
-            socialSkills: gorilla.socialSkills + 1,
-            agility: gorilla.agility + 1,
-            endurance: gorilla.endurance + 1,
-            leadership: gorilla.leadership + 1,
-          };
+      const response = await signAndSubmitTransaction({
+        data: {
+          function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::evolve_gorilla`,
+          typeArguments: [],
+          functionArguments: [gorillaId]
         }
-        return gorilla;
-      }));
+      });
+      
+      await client.waitForTransaction(response.hash);
+      await fetchTribeData();
 
       setShowEvolution(true);
       setTimeout(() => setShowEvolution(false), 1500);
 
       setTransactionStatus('success');
       showTransactionToast('success', 'Your gorilla has evolved successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error evolving gorilla:", error);
       setTransactionStatus('error');
-      showTransactionToast('error', 'Failed to evolve gorilla. Please try again.');
+      let errorMessage = 'Failed to evolve gorilla.';
+      if (error.message?.includes('ENOT_ENOUGH_TIME_PASSED')) {
+        errorMessage = 'Please wait for the cooldown period to end before evolving again.';
+      } else if (error.message?.includes('ENOT_ENOUGH_COINS')) {
+        errorMessage = 'Not enough APT tokens to evolve your gorilla.';
+      } else if (error.message?.includes('ENOT_OWNER')) {
+        errorMessage = 'You can only evolve gorillas up to stage 3.';
+      }
+      showTransactionToast('error', errorMessage);
     } finally {
       setTimeout(() => setTransactionStatus(null), TRANSACTION_STATUS_TIMEOUT);
     }
   };
 
   const burnGorilla = async (gorillaId: string) => {
-    // Clear any existing status first
-    setTransactionStatus(null);
     setTransactionStatus('pending');
     showTransactionToast('pending', 'Burning your gorilla...');
 
     try {
-      setTribe(prevTribe => prevTribe.map(gorilla => 
-        gorilla && gorilla.id === gorillaId ? null : gorilla
-      ));
-      setBananaTokens(prev => prev + 50);
+      const response = await signAndSubmitTransaction({
+        data: {
+          function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::burn_gorilla`,
+          typeArguments: [],
+          functionArguments: [gorillaId]
+        }
+      });
+      
+      await client.waitForTransaction(response.hash);
+      await fetchTribeData();
       
       setTransactionStatus('success');
-      showTransactionToast('success', 'Gorilla burned successfully. You received 50 Banana Tokens.');
-    } catch (error) {
+      showTransactionToast('success', 'Your gorilla has been burned successfully.');
+    } catch (error: any) {
       console.error("Error burning gorilla:", error);
       setTransactionStatus('error');
-      showTransactionToast('error', 'Failed to burn gorilla. Please try again.');
+      let errorMessage = 'Failed to burn gorilla.';
+      if (error.message?.includes('ENOT_OWNER')) {
+        errorMessage = 'You can only burn gorillas that you own.';
+      }
+      showTransactionToast('error', errorMessage);
     } finally {
       setTimeout(() => setTransactionStatus(null), TRANSACTION_STATUS_TIMEOUT);
     }
