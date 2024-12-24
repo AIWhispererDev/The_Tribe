@@ -27,11 +27,12 @@ module crypto_gorilla::gorilla_game_module {
         last_action: Table<address, u64>,
     }
 
-    struct GorillaNFT has key {
+    struct GorillaNFT has key, drop {
         strength: u8,
         intelligence: u8,
         social_skills: u8,
         stage: u8,
+        burn_ref: token::BurnRef,
     }
 
     fun init_module(creator: &signer) {
@@ -51,6 +52,10 @@ module crypto_gorilla::gorilla_game_module {
         };
 
         move_to(creator, game);
+    }
+
+    public entry fun initialize_game(creator: &signer) {
+        init_module(creator);
     }
 
     public entry fun mint_gorilla(account: &signer) acquires GorillaGame {
@@ -85,11 +90,15 @@ module crypto_gorilla::gorilla_game_module {
         let intelligence = (((seed / 100) % 100) as u8) + 1;
         let social_skills = (((seed / 10000) % 100) as u8) + 1;
 
+        // Create burn capability
+        let burn_ref = token::generate_burn_ref(&token_constructor_ref);
+
         let gorilla = GorillaNFT {
             strength,
             intelligence,
             social_skills,
             stage: 0,
+            burn_ref,
         };
 
         move_to(&object::generate_signer(&token_constructor_ref), gorilla);
@@ -131,7 +140,7 @@ module crypto_gorilla::gorilla_game_module {
         table::upsert(&mut game.last_action, account_addr, timestamp::now_seconds());
     }
 
-    public entry fun burn_gorilla(account: &signer, gorilla_id: u64) acquires GorillaGame {
+    public entry fun burn_gorilla(account: &signer, gorilla_id: u64) acquires GorillaGame, GorillaNFT {
         let account_addr = signer::address_of(account);
         let game = borrow_global_mut<GorillaGame>(@crypto_gorilla);
 
@@ -142,8 +151,10 @@ module crypto_gorilla::gorilla_game_module {
         // Remove the gorilla from the tribe
         let gorilla_obj = vector::remove(tribe, gorilla_id);
         
-        // Burn the gorilla token
-        token::burn(gorilla_obj);
+        // Get the gorilla data and burn it
+        let gorilla = move_from<GorillaNFT>(object::object_address(&gorilla_obj));
+        let GorillaNFT { strength: _, intelligence: _, social_skills: _, stage: _, burn_ref } = gorilla;
+        token::burn(burn_ref);
 
         // Update last action time
         table::upsert(&mut game.last_action, account_addr, timestamp::now_seconds());

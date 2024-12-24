@@ -13,7 +13,7 @@ import { TribalContainer, TribalButton, TribalDivider } from './TribalComponents
 
 // Environment variables
 const CRYPTO_GORILLA_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x1";
-const NODE_URL = import.meta.env.VITE_NODE_URL || "https://fullnode.testnet.aptoslabs.com";
+const NODE_URL = import.meta.env.VITE_NODE_URL || "http://127.0.0.1:8080/v1";
 const MAX_TRIBE_SIZE = 5;
 
 const client = new AptosClient(NODE_URL);
@@ -615,7 +615,7 @@ const CryptoGorillaGame: React.FC = () => {
     }
 
     toast({
-      id: 'transaction-toast',
+      id: `transaction-toast-${Date.now()}`,
       title: type === 'pending' ? 'Transaction Pending' : type === 'success' ? 'Success!' : 'Error!',
       description: message,
       status: type === 'pending' ? 'info' : type === 'success' ? 'success' : 'error',
@@ -627,18 +627,28 @@ const CryptoGorillaGame: React.FC = () => {
   };
 
   const mintGorilla = async (index: number) => {
+    if (!account?.address) {
+      showTransactionToast('error', 'Please connect your wallet first');
+      return;
+    }
+
     setTransactionStatus('pending');
     showTransactionToast('pending', 'Minting your new gorilla...');
     
     try {
+      console.log("Submitting transaction to:", CRYPTO_GORILLA_ADDRESS);
       const response = await signAndSubmitTransaction({
         data: {
           function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::mint_gorilla`,
           typeArguments: [],
           functionArguments: []
+        },
+        options: {
+          maxGasAmount: "1000000"
         }
       });
       
+      console.log("Transaction submitted:", response);
       await client.waitForTransaction(response.hash);
       await fetchTribeData();
       

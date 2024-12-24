@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import App from './App'
 import LandingPage from './components/LandingPage'
 import { ChakraProvider } from '@chakra-ui/react'
-import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react"
+import { AptosWalletAdapterProvider, NetworkName } from "@aptos-labs/wallet-adapter-react"
 import { Box } from '@chakra-ui/react'
 import Header from './components/Header'
 import TribePage from './components/TribePage'
@@ -66,7 +66,10 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>
       <ChakraProvider>
-        <AptosWalletAdapterProvider>
+        <AptosWalletAdapterProvider 
+          plugins={[]} 
+          autoConnect={true}
+        >
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/game" element={<GameRouteWrapper><App /></GameRouteWrapper>} />
