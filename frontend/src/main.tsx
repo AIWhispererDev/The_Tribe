@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import App from './App'
 import LandingPage from './components/LandingPage'
 import { ChakraProvider } from '@chakra-ui/react'
-import { AptosWalletAdapterProvider, NetworkName } from "@aptos-labs/wallet-adapter-react"
 import { Box } from '@chakra-ui/react'
 import Header from './components/Header'
 import TribePage from './components/TribePage'
@@ -66,20 +65,15 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>
       <ChakraProvider>
-        <AptosWalletAdapterProvider 
-          plugins={[]} 
-          autoConnect={true}
-        >
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/game" element={<GameRouteWrapper><App /></GameRouteWrapper>} />
-            <Route path="/tribe" element={<GameRouteWrapper><TribePage /></GameRouteWrapper>} />
-            <Route path="/mint" element={<GameRouteWrapper><MintPage /></GameRouteWrapper>} />
-            <Route path="/evolve" element={<GameRouteWrapper><EvolvePage /></GameRouteWrapper>} />
-            <Route path="/leaderboard" element={<GameRouteWrapper><LeaderboardPage /></GameRouteWrapper>} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AptosWalletAdapterProvider>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/game" element={<GameRouteWrapper><App /></GameRouteWrapper>} />
+          <Route path="/tribe" element={<GameRouteWrapper><TribePage /></GameRouteWrapper>} />
+          <Route path="/mint" element={<GameRouteWrapper><MintPage /></GameRouteWrapper>} />
+          <Route path="/evolve" element={<GameRouteWrapper><EvolvePage /></GameRouteWrapper>} />
+          <Route path="/leaderboard" element={<GameRouteWrapper><LeaderboardPage /></GameRouteWrapper>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </ChakraProvider>
     </BrowserRouter>
   </React.StrictMode>,

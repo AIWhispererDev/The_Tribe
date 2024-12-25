@@ -1,108 +1,87 @@
-import {
-  isRedirectable,
-  useWallet,
-  Wallet,
-  WalletReadyState,
-  WalletName,
-  AptosStandardSupportedWallet,
-  truncateAddress,
-} from "@aptos-labs/wallet-adapter-react";
-import { Badge, Box, Button, Image, Menu, MenuButton, MenuItem, MenuList, Text, Tooltip } from "@chakra-ui/react";
-import { FaChevronDown } from "react-icons/fa6";
-import { IoIosLogOut } from "react-icons/io";
+import { useState, useEffect } from 'react';
+import { Button } from "@chakra-ui/react";
+import { FaWallet } from "react-icons/fa";
+import * as NightlyWallet from "@nightlylabs/wallet-selector-aptos";
 
-export function WalletSelector() {
-  const { connect, disconnect, account, wallets, connected, network, wallet } = useWallet();
-
-  const onWalletSelected = (walletName: WalletName) => {
-    connect(walletName);
-  };
-
-  const getLabel = () => {
-    return (
-      <>
-        {network && <p>Network: {network?.url}</p>}
-        {wallet && <p>Wallet: {wallet.name}</p>}
-      </>
-    );
-  };
-
-  const buttonText = account?.ansName ? account?.ansName : truncateAddress(account?.address);
-
-  if (connected) {
-    return (
-      <Tooltip hasArrow label={getLabel()} bg="gray.700" color="gray.100" aria-label="Wallet information">
-        <Button onClick={() => disconnect()} rightIcon={<IoIosLogOut />}>
-          {buttonText}
-        </Button>
-      </Tooltip>
-    );
-  }
-
-  return (
-    <>
-      <Menu>
-        <MenuButton as={Button} rightIcon={<FaChevronDown />}>
-          Connect Wallet
-        </MenuButton>
-        <MenuList>
-          {wallets?.map((wallet: Wallet | AptosStandardSupportedWallet) => {
-            return walletView(wallet, onWalletSelected);
-          })}
-        </MenuList>
-      </Menu>
-    </>
-  );
+interface WalletAccount {
+  address: string;
+  publicKey: string;
 }
 
-const walletView = (wallet: Wallet | AptosStandardSupportedWallet, onWalletSelected: (wallet: WalletName) => void) => {
-  const isWalletReady =
-    wallet.readyState === WalletReadyState.Installed || wallet.readyState === WalletReadyState.Loadable;
+const MOVEMENT_NETWORK = "Movement";
 
-  // The user is on a mobile device
-  if (!isWalletReady && isRedirectable()) {
-    const mobileSupport = (wallet as Wallet).deeplinkProvider;
-    // If the user has a deep linked app, show the wallet
-    if (mobileSupport) {
-      return (
-        <MenuItem key={wallet.name} onClick={() => onWalletSelected(wallet.name)}>
-          <div className="wallet-menu-wrapper">
-            <div className="wallet-name-wrapper">
-              <img src={wallet.icon} width={25} style={{ marginRight: 10 }} />
-              <Text className="wallet-selector-text">{wallet.name}</Text>
-            </div>
-            <Button>
-              <Text>Connect</Text>
-            </Button>
-          </div>
-        </MenuItem>
-      );
-    }
-    // Otherwise don't show anything
-    return null;
-  } else {
-    // The user is on a desktop device
-    return (
-      <MenuItem
-        key={wallet.name}
-        onClick={
-          wallet.readyState === WalletReadyState.Installed || wallet.readyState === WalletReadyState.Loadable
-            ? () => onWalletSelected(wallet.name)
-            : () => window.open(wallet.url)
+export default function WalletSelector() {
+  const [adapter, setAdapter] = useState<NightlyWallet.NightlyConnectAptosAdapter | null>(null);
+  const [connected, setConnected] = useState(false);
+  const [account, setAccount] = useState<WalletAccount | null>(null);
+
+  useEffect(() => {
+    const initWallet = async () => {
+      try {
+        console.log('Initializing wallet...');
+        const nightlyAdapter = await NightlyWallet.NightlyConnectAptosAdapter.build({
+          appMetadata: {
+            name: "CryptoGorilla",
+            description: "CryptoGorilla Game",
+            icon: "/images/tribe-logo.png",
+          },
+          network: MOVEMENT_NETWORK,
+        });
+        
+        setAdapter(nightlyAdapter);
+        console.log('Wallet initialized:', nightlyAdapter);
+
+        try {
+          const currentAccount = await nightlyAdapter.account();
+          if (currentAccount) {
+            setConnected(true);
+            setAccount(currentAccount);
+          }
+        } catch (error) {
+          console.log('No active account found');
         }
-      >
-        <Image src={wallet.icon} width={25} marginRight={2} />
-        <Box flex={1} paddingRight={4}>
-          {wallet.name}
-        </Box>
-        {wallet.readyState === WalletReadyState.Installed || wallet.readyState === WalletReadyState.Loadable ? (
-          <Badge>Connect</Badge>
-        ) : (
-          <Badge>Install</Badge>
-        )}
-      </MenuItem>
-    );
-  }
-};
+      } catch (error) {
+        console.error('Failed to initialize wallet:', error);
+      }
+    };
 
-export default WalletSelector; 
+    initWallet();
+  }, []);
+
+  const handleConnect = async () => {
+    try {
+      if (!adapter) return;
+      await adapter.connect();
+      const currentAccount = await adapter.account();
+      setConnected(true);
+      setAccount(currentAccount);
+    } catch (error) {
+      console.error('Failed to connect:', error);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      if (!adapter) return;
+      await adapter.disconnect();
+      setConnected(false);
+      setAccount(null);
+    } catch (error) {
+      console.error('Failed to disconnect:', error);
+    }
+  };
+
+  const displayAddress = typeof account?.address === 'string' 
+    ? `${account.address.substring(0, 6)}...${account.address.substring(account.address.length - 4)}`
+    : '';
+
+  return (
+    <Button
+      leftIcon={<FaWallet />}
+      onClick={connected ? handleDisconnect : handleConnect}
+      colorScheme={connected ? "green" : "gray"}
+    >
+      {connected ? `Connected: ${displayAddress}` : "Connect Wallet"}
+    </Button>
+  );
+}
