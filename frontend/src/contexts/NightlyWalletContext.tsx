@@ -6,6 +6,10 @@ interface NightlyWalletContextType {
   setAdapter: (adapter: NightlyWallet.NightlyConnectAptosAdapter | null) => void;
   isWalletReady: boolean;
   setIsWalletReady: (ready: boolean) => void;
+  isConnected: boolean;
+  setIsConnected: (connected: boolean) => void;
+  account: { address: string; publicKey: string } | null;
+  setAccount: (account: { address: string; publicKey: string } | null) => void;
 }
 
 const NightlyWalletContext = createContext<NightlyWalletContextType | null>(null);
@@ -25,13 +29,19 @@ interface NightlyWalletProviderProps {
 export function NightlyWalletProvider({ children }: NightlyWalletProviderProps) {
   const [adapter, setAdapter] = useState<NightlyWallet.NightlyConnectAptosAdapter | null>(null);
   const [isWalletReady, setIsWalletReady] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [account, setAccount] = useState<{ address: string; publicKey: string } | null>(null);
 
   return (
     <NightlyWalletContext.Provider value={{ 
       adapter, 
       setAdapter,
       isWalletReady,
-      setIsWalletReady
+      setIsWalletReady,
+      isConnected,
+      setIsConnected,
+      account,
+      setAccount
     }}>
       {children}
     </NightlyWalletContext.Provider>

@@ -460,7 +460,7 @@ const TransactionFeedback = ({ status }: { status: 'pending' | 'success' | 'erro
 const TRANSACTION_STATUS_TIMEOUT = 2000; // Consistent timeout duration
 
 const CryptoGorillaGame: React.FC = () => {
-  const { adapter, isWalletReady } = useNightlyWallet();
+  const { adapter, isConnected, account } = useNightlyWallet();
   const toast = useToast();
   const [transactionStatus, setTransactionStatus] = useState<'pending' | 'success' | 'error' | null>(null);
   const [tribe, setTribe] = useState<Array<Gorilla | null>>([
@@ -492,30 +492,31 @@ const CryptoGorillaGame: React.FC = () => {
     pendingMessage: string,
     successMessage: string
   ) => {
-    if (!isWalletReady || !adapter) {
+    if (!isConnected || !account || !adapter) {
       showTransactionToast('error', 'Please connect your wallet first');
-      return;
+      return false;
     }
 
     try {
-      // First check if we have a valid account
-      if (!adapter?.publicAccount?.address) {
-        showTransactionToast('error', 'Wallet not properly connected. Please reconnect.');
-        return false;
-      }
-
       setTransactionStatus('pending');
       showTransactionToast('pending', pendingMessage);
 
       // Construct the full function name with module address
       const fullFunctionName = `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::${functionName}`;
 
+      // Format payload according to Nightly Wallet's expectations
       const payload = {
+        type: "entry_function_payload",
         function: fullFunctionName,
         type_arguments: [],
-        arguments: args,
-        type: 'entry_function_payload'
-      } as Types.TransactionPayload;
+        arguments: args.map(arg => {
+          // Convert numbers to strings with BCS format
+          if (typeof arg === 'number') {
+            return arg.toString();
+          }
+          return arg;
+        })
+      };
 
       console.log('Submitting transaction with payload:', payload);
       
@@ -542,6 +543,44 @@ const CryptoGorillaGame: React.FC = () => {
       showTransactionToast('error', `Transaction failed: ${errorMessage}`);
       return false;
     }
+  };
+
+  const evolveGorilla = async (gorillaId: string) => {
+    // Convert string ID to u64 string
+    const id = BigInt(gorillaId).toString();
+    
+    const success = await executeTransaction(
+      'evolve_gorilla',
+      [id],
+      'Evolving your gorilla...',
+      'Your gorilla has evolved successfully!'
+    );
+
+    if (success) {
+      setShowEvolution(true);
+      setTimeout(() => setShowEvolution(false), 1500);
+    }
+  };
+
+  const burnGorilla = async (gorillaId: string) => {
+    // Convert string ID to u64 string
+    const id = BigInt(gorillaId).toString();
+    
+    await executeTransaction(
+      'burn_gorilla',
+      [id],
+      'Burning your gorilla...',
+      'Your gorilla has been burned successfully!'
+    );
+  };
+
+  const mintGorilla = async (index: number) => {
+    await executeTransaction(
+      'mint_gorilla',
+      [], // mint_gorilla only takes a signer parameter
+      'Minting your gorilla...',
+      'Your gorilla has been minted successfully!'
+    );
   };
 
   const fetchTribeData = async () => {
@@ -682,38 +721,6 @@ const CryptoGorillaGame: React.FC = () => {
       position: 'bottom-right',
       variant: 'solid',
     });
-  };
-
-  const evolveGorilla = async (gorillaId: string) => {
-    const success = await executeTransaction(
-      'evolve_gorilla',
-      [gorillaId],
-      'Evolving your gorilla...',
-      'Your gorilla has evolved successfully!'
-    );
-
-    if (success) {
-      setShowEvolution(true);
-      setTimeout(() => setShowEvolution(false), 1500);
-    }
-  };
-
-  const burnGorilla = async (gorillaId: string) => {
-    await executeTransaction(
-      'burn_gorilla',
-      [gorillaId],
-      'Burning your gorilla...',
-      'Your gorilla has been burned successfully!'
-    );
-  };
-
-  const mintGorilla = async (index: number) => {
-    await executeTransaction(
-      'mint_gorilla',
-      [], // The signer is automatically added by the wallet adapter
-      'Minting your gorilla...',
-      'Your gorilla has been minted successfully!'
-    );
   };
 
   const calculateGorillaScore = (gorilla: Gorilla): number => {

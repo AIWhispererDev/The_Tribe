@@ -14,9 +14,8 @@ const MOVEMENT_NETWORK = "Movement";
 
 export default function WalletSelector() {
   const toast = useToast();
-  const { adapter, setAdapter, setIsWalletReady } = useNightlyWallet();
-  const [connected, setConnected] = useState(false);
-  const [account, setAccount] = useState<WalletAccount | null>(null);
+  const { adapter, setAdapter, setIsWalletReady, setIsConnected, setAccount } = useNightlyWallet();
+  const [connected, setLocalConnected] = useState(false);
 
   const checkWalletConnection = async (walletAdapter: NightlyWallet.NightlyConnectAptosAdapter) => {
     try {
@@ -26,12 +25,25 @@ export default function WalletSelector() {
         return false;
       }
 
-      // We'll only check account status when handling the connect action
+      // Check if we have a public account
+      const publicAccount = walletAdapter.publicAccount;
+      if (publicAccount?.address) {
+        setIsConnected(true);
+        setLocalConnected(true);
+        setAccount({
+          address: publicAccount.address.toString(),
+          publicKey: publicAccount.publicKey.toString()
+        });
+        setIsWalletReady(true);
+        return true;
+      }
+
       setIsWalletReady(true);
-      return true;
+      return false;
     } catch (error) {
       console.error('Wallet connection error:', error);
-      setConnected(false);
+      setLocalConnected(false);
+      setIsConnected(false);
       setAccount(null);
       setIsWalletReady(false);
       return false;
@@ -56,7 +68,8 @@ export default function WalletSelector() {
       console.log('Connected to wallet, account:', account);
       
       if (account && account.address) {
-        setConnected(true);
+        setLocalConnected(true);
+        setIsConnected(true);
         setAccount({
           address: account.address.toString(),
           publicKey: account.publicKey.toString()
@@ -71,7 +84,8 @@ export default function WalletSelector() {
       }
     } catch (error) {
       console.error('Failed to connect wallet:', error);
-      setConnected(false);
+      setLocalConnected(false);
+      setIsConnected(false);
       setAccount(null);
       toast({
         title: 'Connection Error',
@@ -88,7 +102,8 @@ export default function WalletSelector() {
 
     try {
       await adapter.disconnect();
-      setConnected(false);
+      setLocalConnected(false);
+      setIsConnected(false);
       setAccount(null);
       setIsWalletReady(false);
       toast({
@@ -142,14 +157,14 @@ export default function WalletSelector() {
     };
 
     initWallet();
-  }, [toast, setAdapter, setIsWalletReady]);
+  }, [toast, setAdapter, setIsWalletReady, setIsConnected, setAccount]);
 
   return (
     <TribalButton
       onClick={connected ? handleDisconnect : handleConnect}
       leftIcon={<FaWallet />}
     >
-      {connected && account ? `Connected: ${account.address.slice(0, 4)}...${account.address.slice(-4)}` : 'Connect Wallet'}
+      {connected ? 'Disconnect Wallet' : 'Connect Wallet'}
     </TribalButton>
   );
 }
