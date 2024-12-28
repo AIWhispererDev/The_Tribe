@@ -11,7 +11,7 @@ export const NETWORK_NAME = "Local Testnet";
 export const NETWORK_CURRENCY = "MOVE";
 
 // Contract addresses
-export const GORILLA_CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x1";
+export const GORILLA_CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 // Initialize Movement client
 export const initializeMovementClient = () => {

@@ -12,7 +12,7 @@ import { TribalContainer, TribalButton, TribalDivider } from './TribalComponents
 import { useNightlyWallet } from '../contexts/NightlyWalletContext';
 
 // Environment variables
-const CRYPTO_GORILLA_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x1";
+const CRYPTO_GORILLA_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 const NODE_URL = import.meta.env.VITE_NODE_URL || "http://127.0.0.1:8080/v1";
 const MAX_TRIBE_SIZE = 5;
 
