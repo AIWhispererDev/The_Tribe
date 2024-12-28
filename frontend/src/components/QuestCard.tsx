@@ -10,7 +10,7 @@ interface QuestCardProps {
   image: string;
 }
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 
 const HolographicIcon = ({ icon: Icon }) => (
   <Box
@@ -146,4 +146,4 @@ export default function QuestCard({ id, name, level, edition, image }: QuestCard
       </Box>
     </MotionBox>
   );
-} 
+}

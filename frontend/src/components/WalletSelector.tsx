@@ -21,59 +21,22 @@ export default function WalletSelector() {
   const checkWalletConnection = async (walletAdapter: NightlyWallet.NightlyConnectAptosAdapter) => {
     try {
       console.log('Checking wallet connection...');
-      const currentAccount = await walletAdapter.account();
-      console.log('Current account:', currentAccount);
-      
-      if (currentAccount) {
-        console.log('Account found:', currentAccount);
-        setConnected(true);
-        setAccount({
-          address: currentAccount.address.toString(),
-          publicKey: currentAccount.publicKey.toString()
-        });
-        setIsWalletReady(true);
-        return true;
+      if (!walletAdapter) {
+        console.error('Wallet adapter not initialized');
+        return false;
       }
+
+      // We'll only check account status when handling the connect action
+      setIsWalletReady(true);
+      return true;
     } catch (error) {
-      console.log('No active account found:', error);
+      console.error('Wallet connection error:', error);
       setConnected(false);
       setAccount(null);
       setIsWalletReady(false);
+      return false;
     }
-    return false;
   };
-
-  useEffect(() => {
-    const initWallet = async () => {
-      try {
-        console.log('Initializing wallet...');
-        const nightlyAdapter = await NightlyWallet.NightlyConnectAptosAdapter.build({
-          appMetadata: {
-            name: "CryptoGorilla",
-            description: "CryptoGorilla Game",
-            icon: "/images/tribe-logo.png",
-          },
-          network: MOVEMENT_NETWORK
-        });
-        
-        setAdapter(nightlyAdapter);
-        console.log('Wallet initialized:', nightlyAdapter);
-        await checkWalletConnection(nightlyAdapter);
-      } catch (error) {
-        console.error('Failed to initialize wallet:', error);
-        setIsWalletReady(false);
-        toast({
-          title: 'Wallet Error',
-          description: 'Failed to initialize wallet. Please try again.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    };
-
-    initWallet();
-  }, [toast, setAdapter, setIsWalletReady]);
 
   const handleConnect = async () => {
     if (!adapter) {
@@ -92,28 +55,27 @@ export default function WalletSelector() {
       const account = await adapter.connect();
       console.log('Connected to wallet, account:', account);
       
-      setConnected(true);
-      setAccount({
-        address: account.address.toString(),
-        publicKey: account.publicKey.toString()
-      });
-      setIsWalletReady(true);
-      
-      toast({
-        title: 'Wallet Connected',
-        description: 'Successfully connected to wallet',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error: any) {
+      if (account && account.address) {
+        setConnected(true);
+        setAccount({
+          address: account.address.toString(),
+          publicKey: account.publicKey.toString()
+        });
+        toast({
+          title: 'Success',
+          description: 'Wallet connected successfully!',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
       console.error('Failed to connect wallet:', error);
-      setIsWalletReady(false);
       setConnected(false);
       setAccount(null);
       toast({
-        title: 'Connection Failed',
-        description: error.message || 'Failed to connect wallet. Please try again.',
+        title: 'Connection Error',
+        description: error instanceof Error ? error.message : 'Failed to connect wallet',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -147,6 +109,40 @@ export default function WalletSelector() {
       });
     }
   };
+
+  useEffect(() => {
+    const initWallet = async () => {
+      try {
+        console.log('Initializing wallet...');
+        const nightlyAdapter = await NightlyWallet.NightlyConnectAptosAdapter.build({
+          appMetadata: {
+            name: "CryptoGorilla",
+            description: "CryptoGorilla Game",
+            icon: "/images/tribe-logo.png",
+          },
+          network: MOVEMENT_NETWORK,
+          networkType: "movement",
+          chainId: 1,
+        });
+        
+        setAdapter(nightlyAdapter);
+        console.log('Wallet initialized:', nightlyAdapter);
+        await checkWalletConnection(nightlyAdapter);
+      } catch (error) {
+        console.error('Failed to initialize wallet:', error);
+        setIsWalletReady(false);
+        toast({
+          title: 'Wallet Error',
+          description: 'Failed to initialize wallet. Please try again.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    };
+
+    initWallet();
+  }, [toast, setAdapter, setIsWalletReady]);
 
   return (
     <TribalButton

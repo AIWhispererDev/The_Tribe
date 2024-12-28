@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { AptosClient } from "aptos";
+import { AptosClient, Types } from "aptos";
 import { Box, Container, Text, VStack, HStack, Grid, keyframes, useToast, Icon, Button } from '@chakra-ui/react';
 import { Coins, Trophy, Star, Leaf, TreePine, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -486,37 +486,6 @@ const CryptoGorillaGame: React.FC = () => {
   const [showEvolution, setShowEvolution] = useState(false);
   const [useNewCardStyle, setUseNewCardStyle] = useState(false);
 
-  const createTransactionPayload = (functionName: string, args: any[]) => {
-    // Format arguments to BCS format
-    const formattedArgs = args.map(arg => {
-      if (typeof arg === 'number') {
-        return arg.toString();
-      } else if (typeof arg === 'string' && /^\d+$/.test(arg)) {
-        // If it's a string containing only numbers
-        return arg;
-      } else if (typeof arg === 'string') {
-        // For non-numeric strings, convert to hex if needed
-        return arg.startsWith('0x') ? arg : `0x${Buffer.from(arg).toString('hex')}`;
-      }
-      return arg;
-    });
-
-    const payload = {
-      function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::${functionName}`,
-      type_arguments: [],
-      arguments: formattedArgs,
-      type: "entry_function_payload"
-    };
-
-    console.log('Created transaction payload:', {
-      ...payload,
-      contractAddress: CRYPTO_GORILLA_ADDRESS,
-      nodeUrl: NODE_URL
-    });
-
-    return payload;
-  };
-
   const executeTransaction = async (
     functionName: string,
     args: any[],
@@ -529,30 +498,43 @@ const CryptoGorillaGame: React.FC = () => {
     }
 
     try {
-      // Try to get the account, this will throw if not connected
-      const account = await adapter.account();
-      if (!account) {
-        showTransactionToast('error', 'Please connect your wallet first');
-        return;
+      // First check if we have a valid account
+      if (!adapter?.publicAccount?.address) {
+        showTransactionToast('error', 'Wallet not properly connected. Please reconnect.');
+        return false;
       }
 
       setTransactionStatus('pending');
       showTransactionToast('pending', pendingMessage);
 
-      const payload = createTransactionPayload(functionName, args);
+      // Construct the full function name with module address
+      const fullFunctionName = `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::${functionName}`;
+
+      const payload = {
+        function: fullFunctionName,
+        type_arguments: [],
+        arguments: args,
+        type: 'entry_function_payload'
+      } as Types.TransactionPayload;
+
       console.log('Submitting transaction with payload:', payload);
       
+      // Submit the transaction through the wallet adapter
       const response = await adapter.signAndSubmitTransaction(payload);
       console.log('Transaction submitted:', response);
       
-      await client.waitForTransaction(response.hash);
-      console.log('Transaction confirmed');
-      
-      await fetchTribeData();
+      if (response?.hash) {
+        await client.waitForTransaction(response.hash);
+        console.log('Transaction confirmed');
+        
+        await fetchTribeData();
 
-      setTransactionStatus('success');
-      showTransactionToast('success', successMessage);
-      return true;
+        setTransactionStatus('success');
+        showTransactionToast('success', successMessage);
+        return true;
+      } else {
+        throw new Error('Transaction failed: No transaction hash returned');
+      }
     } catch (error: any) {
       console.error(`Error executing ${functionName}:`, error);
       const errorMessage = error.message || 'Please try again.';
@@ -728,7 +710,7 @@ const CryptoGorillaGame: React.FC = () => {
   const mintGorilla = async (index: number) => {
     await executeTransaction(
       'mint_gorilla',
-      [index.toString()],
+      [], // The signer is automatically added by the wallet adapter
       'Minting your gorilla...',
       'Your gorilla has been minted successfully!'
     );
