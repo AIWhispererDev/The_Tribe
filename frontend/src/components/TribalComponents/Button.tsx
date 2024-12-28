@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button as ChakraButton, ButtonProps, Icon, keyframes } from '@chakra-ui/react';
+import { Button, ButtonProps, keyframes } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 
 const glowPulse = keyframes`
@@ -13,19 +13,19 @@ const rippleEffect = keyframes`
   100% { transform: scale(4); opacity: 0; }
 `;
 
+const MotionButton = motion.create(Button);
+
 export interface TribalButtonProps extends ButtonProps {
   variant?: 'primary' | 'secondary' | 'danger';
-  icon?: React.ElementType;
   glowOnHover?: boolean;
+  icon?: React.ElementType;
 }
-
-const MotionButton = motion(ChakraButton);
 
 export const TribalButton: React.FC<TribalButtonProps> = ({
   children,
   variant = 'primary',
-  icon,
   glowOnHover = true,
+  icon: Icon,
   ...props
 }) => {
   const variants = {
@@ -36,10 +36,7 @@ export const TribalButton: React.FC<TribalButtonProps> = ({
       _hover: {
         bg: 'rgba(42, 76, 59, 0.5)',
         borderColor: 'rgba(229, 255, 68, 0.5)',
-        _before: {
-          transform: "translateX(100%)",
-        },
-        animation: glowOnHover ? `${glowPulse} 2s infinite` : 'none',
+        boxShadow: glowOnHover ? "0 0 15px rgba(229, 255, 68, 0.5)" : "none",
       },
     },
     secondary: {
@@ -49,10 +46,7 @@ export const TribalButton: React.FC<TribalButtonProps> = ({
       _hover: {
         bg: 'rgba(107, 75, 255, 0.3)',
         borderColor: 'rgba(107, 75, 255, 0.5)',
-        _before: {
-          transform: "translateX(100%)",
-        },
-        animation: glowOnHover ? `${glowPulse} 2s infinite` : 'none',
+        boxShadow: glowOnHover ? "0 0 15px rgba(229, 255, 68, 0.5)" : "none",
       },
     },
     danger: {
@@ -62,10 +56,7 @@ export const TribalButton: React.FC<TribalButtonProps> = ({
       _hover: {
         bg: 'rgba(255, 68, 68, 0.3)',
         borderColor: 'rgba(255, 68, 68, 0.5)',
-        _before: {
-          transform: "translateX(100%)",
-        },
-        animation: glowOnHover ? `${glowPulse} 2s infinite` : 'none',
+        boxShadow: glowOnHover ? "0 0 15px rgba(229, 255, 68, 0.5)" : "none",
       },
     },
   };
@@ -110,7 +101,12 @@ export const TribalButton: React.FC<TribalButtonProps> = ({
           animation: `${rippleEffect} 0.8s ease-out`,
         },
       }}
-      leftIcon={icon && <Icon as={icon} className="button-icon" />}
+      sx={{
+        '&:hover': {
+          animation: glowOnHover ? `${glowPulse} 2s infinite` : 'none'
+        },
+      }}
+      leftIcon={Icon && <Icon size={20} />}
       {...variants[variant]}
       {...props}
     >
@@ -119,4 +115,4 @@ export const TribalButton: React.FC<TribalButtonProps> = ({
   );
 };
 
-export default TribalButton; 
+export default TribalButton;

@@ -10,6 +10,7 @@ import TribePage from './components/TribePage'
 import MintPage from './components/MintPage'
 import EvolvePage from './components/EvolvePage'
 import LeaderboardPage from './components/LeaderboardPage'
+import { NightlyWalletProvider } from './contexts/NightlyWalletContext'
 
 // Game route wrapper component
 const GameRouteWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -65,15 +66,17 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>
       <ChakraProvider>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/game" element={<GameRouteWrapper><App /></GameRouteWrapper>} />
-          <Route path="/tribe" element={<GameRouteWrapper><TribePage /></GameRouteWrapper>} />
-          <Route path="/mint" element={<GameRouteWrapper><MintPage /></GameRouteWrapper>} />
-          <Route path="/evolve" element={<GameRouteWrapper><EvolvePage /></GameRouteWrapper>} />
-          <Route path="/leaderboard" element={<GameRouteWrapper><LeaderboardPage /></GameRouteWrapper>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <NightlyWalletProvider>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/game" element={<GameRouteWrapper><App /></GameRouteWrapper>} />
+            <Route path="/tribe" element={<GameRouteWrapper><TribePage /></GameRouteWrapper>} />
+            <Route path="/mint" element={<GameRouteWrapper><MintPage /></GameRouteWrapper>} />
+            <Route path="/evolve" element={<GameRouteWrapper><EvolvePage /></GameRouteWrapper>} />
+            <Route path="/leaderboard" element={<GameRouteWrapper><LeaderboardPage /></GameRouteWrapper>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </NightlyWalletProvider>
       </ChakraProvider>
     </BrowserRouter>
   </React.StrictMode>,

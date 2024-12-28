@@ -51,53 +51,38 @@ export default function Header() {
             color="#CCFF00"
             _hover={{ 
               textDecoration: 'none',
-              textShadow: '0 0 10px rgba(204, 255, 0, 0.5)'
+              color: '#E5FF44'
             }}
-            transition="all 0.2s"
           >
-            TRIBE
+            CRYPTOGORILLA
           </Link>
 
-          <HStack spacing={8} display={{ base: 'none', md: 'flex' }}>
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                as={RouterLink}
-                to={item.path}
-                color={location.pathname === item.path ? '#CCFF00' : 'whiteAlpha.900'}
-                fontWeight="medium"
-                fontSize="sm"
-                letterSpacing="wide"
-                textTransform="uppercase"
-                _hover={{ 
-                  color: '#CCFF00',
-                  textShadow: '0 0 10px rgba(204, 255, 0, 0.5)'
-                }}
-                transition="all 0.2s"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </HStack>
-
-          <HStack spacing={4}>
-            <WalletSelector />
-            {isMobile && (
-              <Box
-                as="button"
-                p={2}
-                color="white"
-                _hover={{ 
-                  bg: 'whiteAlpha.100',
-                  color: '#CCFF00'
-                }}
-                borderRadius="md"
-                transition="all 0.2s"
-              >
-                <Icon as={Menu} boxSize={6} />
+          {isMobile ? (
+            <Icon as={Menu} boxSize={6} color="white" />
+          ) : (
+            <HStack spacing={8} align="center">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  as={RouterLink}
+                  to={item.path}
+                  color={location.pathname === item.path ? '#CCFF00' : 'white'}
+                  fontWeight="medium"
+                  fontSize="sm"
+                  _hover={{ 
+                    color: '#E5FF44',
+                    textDecoration: 'none'
+                  }}
+                  transition="color 0.2s"
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <Box ml={4}>
+                <WalletSelector />
               </Box>
-            )}
-          </HStack>
+            </HStack>
+          )}
         </Flex>
       </Container>
     </Box>

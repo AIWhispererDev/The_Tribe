@@ -192,7 +192,7 @@ const CardWrapper = ({ children, onClick }: { children: React.ReactNode, onClick
   </Box>
 );
 
-export default function GorillaCardV2({ gorilla, onMint, onEvolve, onBurn, score }: GorillaCardProps) {
+const GorillaCardV2 = ({ gorilla, onMint, onEvolve, onBurn, score }: GorillaCardProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   if (!gorilla) {
@@ -485,4 +485,6 @@ export default function GorillaCardV2({ gorilla, onMint, onEvolve, onBurn, score
       </CardWrapper>
     </Box>
   );
-} 
+};
+
+export default GorillaCardV2;

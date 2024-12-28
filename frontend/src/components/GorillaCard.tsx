@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Box, VStack, HStack, Text, Button, Progress } from '@chakra-ui/react';
 import { Repeat, Hexagon, Sparkles, Star, Leaf } from 'lucide-react';
 
@@ -23,7 +23,7 @@ interface GorillaCardProps {
   isRecommendedBurn: boolean;
 }
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 
 const HolographicIcon = ({ icon: Icon }: { icon: React.ElementType }) => (
   <Box
@@ -191,7 +191,7 @@ const StageProgress = ({ stage, color }: { stage: number; color: string }) => {
   );
 };
 
-export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, isRecommendedBurn }: GorillaCardProps) {
+const GorillaCard = ({ gorilla, onMint, onEvolve, onBurn, score, isRecommendedBurn }: GorillaCardProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -594,4 +594,6 @@ export default function GorillaCard({ gorilla, onMint, onEvolve, onBurn, score, 
       </motion.div>
     </Box>
   );
-}
+};
+
+export default GorillaCard;

@@ -1,15 +1,15 @@
 import React, { useState, useCallback } from 'react';
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
 import { Box, Container, Text, VStack, HStack, Grid, keyframes, useToast, Icon, Button } from '@chakra-ui/react';
 import { Coins, Trophy, Star, Leaf, TreePine, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GorillaCard from './GorillaCard';
-import PokemonStyleCard from './GorillaCardV2';
+import GorillaCardV2 from './GorillaCardV2';
 import { Particles } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Engine } from "@tsparticles/engine";
 import { TribalContainer, TribalButton, TribalDivider } from './TribalComponents';
+import { useNightlyWallet } from '../contexts/NightlyWalletContext';
 
 // Environment variables
 const CRYPTO_GORILLA_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x1";
@@ -460,7 +460,7 @@ const TransactionFeedback = ({ status }: { status: 'pending' | 'success' | 'erro
 const TRANSACTION_STATUS_TIMEOUT = 2000; // Consistent timeout duration
 
 const CryptoGorillaGame: React.FC = () => {
-  const { account, signAndSubmitTransaction } = useWallet();
+  const { adapter, isWalletReady } = useNightlyWallet();
   const toast = useToast();
   const [transactionStatus, setTransactionStatus] = useState<'pending' | 'success' | 'error' | null>(null);
   const [tribe, setTribe] = useState<Array<Gorilla | null>>([
@@ -486,20 +486,96 @@ const CryptoGorillaGame: React.FC = () => {
   const [showEvolution, setShowEvolution] = useState(false);
   const [useNewCardStyle, setUseNewCardStyle] = useState(false);
 
+  const createTransactionPayload = (functionName: string, args: any[]) => {
+    // Format arguments to BCS format
+    const formattedArgs = args.map(arg => {
+      if (typeof arg === 'number') {
+        return arg.toString();
+      } else if (typeof arg === 'string' && /^\d+$/.test(arg)) {
+        // If it's a string containing only numbers
+        return arg;
+      } else if (typeof arg === 'string') {
+        // For non-numeric strings, convert to hex if needed
+        return arg.startsWith('0x') ? arg : `0x${Buffer.from(arg).toString('hex')}`;
+      }
+      return arg;
+    });
+
+    const payload = {
+      function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::${functionName}`,
+      type_arguments: [],
+      arguments: formattedArgs,
+      type: "entry_function_payload"
+    };
+
+    console.log('Created transaction payload:', {
+      ...payload,
+      contractAddress: CRYPTO_GORILLA_ADDRESS,
+      nodeUrl: NODE_URL
+    });
+
+    return payload;
+  };
+
+  const executeTransaction = async (
+    functionName: string,
+    args: any[],
+    pendingMessage: string,
+    successMessage: string
+  ) => {
+    if (!isWalletReady || !adapter) {
+      showTransactionToast('error', 'Please connect your wallet first');
+      return;
+    }
+
+    try {
+      // Try to get the account, this will throw if not connected
+      const account = await adapter.account();
+      if (!account) {
+        showTransactionToast('error', 'Please connect your wallet first');
+        return;
+      }
+
+      setTransactionStatus('pending');
+      showTransactionToast('pending', pendingMessage);
+
+      const payload = createTransactionPayload(functionName, args);
+      console.log('Submitting transaction with payload:', payload);
+      
+      const response = await adapter.signAndSubmitTransaction(payload);
+      console.log('Transaction submitted:', response);
+      
+      await client.waitForTransaction(response.hash);
+      console.log('Transaction confirmed');
+      
+      await fetchTribeData();
+
+      setTransactionStatus('success');
+      showTransactionToast('success', successMessage);
+      return true;
+    } catch (error: any) {
+      console.error(`Error executing ${functionName}:`, error);
+      const errorMessage = error.message || 'Please try again.';
+      setTransactionStatus('error');
+      showTransactionToast('error', `Transaction failed: ${errorMessage}`);
+      return false;
+    }
+  };
+
   const fetchTribeData = async () => {
-    if (!account?.address) {
+    if (!adapter?.publicAccount) {
       console.log("No wallet connected");
       return;
     }
 
     try {
-      console.log("Fetching tribe data for address:", account.address);
+      console.log("Fetching tribe data for address:", adapter.publicAccount.address);
       console.log("Using contract address:", CRYPTO_GORILLA_ADDRESS);
       
       const tribeResponse = await client.view({
         function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::get_tribe`,
         type_arguments: [],
-        arguments: [account.address],
+        arguments: [adapter.publicAccount.address],
       });
 
       console.log("Tribe response:", tribeResponse);
@@ -543,7 +619,7 @@ const CryptoGorillaGame: React.FC = () => {
       const scoreResponse = await client.view({
         function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::calculate_tribe_score`,
         type_arguments: [],
-        arguments: [account.address],
+        arguments: [adapter.publicAccount.address],
       });
       
       setTribeScore(Number(scoreResponse[0]));
@@ -574,10 +650,10 @@ const CryptoGorillaGame: React.FC = () => {
   };
 
   React.useEffect(() => {
-    if (account?.address) {
+    if (adapter?.publicAccount) {
       fetchTribeData();
     }
-  }, [account]);
+  }, [adapter]);
 
   React.useEffect(() => {
     calculateTribeScore();
@@ -626,118 +702,36 @@ const CryptoGorillaGame: React.FC = () => {
     });
   };
 
-  const mintGorilla = async (index: number) => {
-    if (!account?.address) {
-      showTransactionToast('error', 'Please connect your wallet first');
-      return;
-    }
-
-    setTransactionStatus('pending');
-    showTransactionToast('pending', 'Minting your new gorilla...');
-    
-    try {
-      console.log("Submitting transaction to:", CRYPTO_GORILLA_ADDRESS);
-      const response = await signAndSubmitTransaction({
-        data: {
-          function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::mint_gorilla`,
-          typeArguments: [],
-          functionArguments: []
-        },
-        options: {
-          maxGasAmount: "1000000"
-        }
-      });
-      
-      console.log("Transaction submitted:", response);
-      await client.waitForTransaction(response.hash);
-      await fetchTribeData();
-      
-      setTransactionStatus('success');
-      showTransactionToast('success', 'Successfully minted a new gorilla!');
-    } catch (error: any) {
-      console.error("Error minting gorilla:", error);
-      setTransactionStatus('error');
-      let errorMessage = 'Failed to mint gorilla.';
-      if (error.message?.includes('ETRIBE_FULL')) {
-        errorMessage = 'Your tribe is full! Try burning a gorilla first.';
-      } else if (error.message?.includes('ENOT_ENOUGH_TIME_PASSED')) {
-        errorMessage = 'Please wait for the cooldown period to end before minting again.';
-      } else if (error.message?.includes('ENOT_ENOUGH_COINS')) {
-        errorMessage = 'Not enough APT tokens to mint a gorilla.';
-      }
-      showTransactionToast('error', errorMessage);
-    } finally {
-      setTimeout(() => setTransactionStatus(null), TRANSACTION_STATUS_TIMEOUT);
-    }
-  };
-
   const evolveGorilla = async (gorillaId: string) => {
-    setTransactionStatus('pending');
-    showTransactionToast('pending', 'Evolving your gorilla...');
+    const success = await executeTransaction(
+      'evolve_gorilla',
+      [gorillaId],
+      'Evolving your gorilla...',
+      'Your gorilla has evolved successfully!'
+    );
 
-    try {
-      const response = await signAndSubmitTransaction({
-        data: {
-          function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::evolve_gorilla`,
-          typeArguments: [],
-          functionArguments: [gorillaId]
-        }
-      });
-      
-      await client.waitForTransaction(response.hash);
-      await fetchTribeData();
-
+    if (success) {
       setShowEvolution(true);
       setTimeout(() => setShowEvolution(false), 1500);
-
-      setTransactionStatus('success');
-      showTransactionToast('success', 'Your gorilla has evolved successfully!');
-    } catch (error: any) {
-      console.error("Error evolving gorilla:", error);
-      setTransactionStatus('error');
-      let errorMessage = 'Failed to evolve gorilla.';
-      if (error.message?.includes('ENOT_ENOUGH_TIME_PASSED')) {
-        errorMessage = 'Please wait for the cooldown period to end before evolving again.';
-      } else if (error.message?.includes('ENOT_ENOUGH_COINS')) {
-        errorMessage = 'Not enough APT tokens to evolve your gorilla.';
-      } else if (error.message?.includes('ENOT_OWNER')) {
-        errorMessage = 'You can only evolve gorillas up to stage 3.';
-      }
-      showTransactionToast('error', errorMessage);
-    } finally {
-      setTimeout(() => setTransactionStatus(null), TRANSACTION_STATUS_TIMEOUT);
     }
   };
 
   const burnGorilla = async (gorillaId: string) => {
-    setTransactionStatus('pending');
-    showTransactionToast('pending', 'Burning your gorilla...');
+    await executeTransaction(
+      'burn_gorilla',
+      [gorillaId],
+      'Burning your gorilla...',
+      'Your gorilla has been burned successfully!'
+    );
+  };
 
-    try {
-      const response = await signAndSubmitTransaction({
-        data: {
-          function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::burn_gorilla`,
-          typeArguments: [],
-          functionArguments: [gorillaId]
-        }
-      });
-      
-      await client.waitForTransaction(response.hash);
-      await fetchTribeData();
-      
-      setTransactionStatus('success');
-      showTransactionToast('success', 'Your gorilla has been burned successfully.');
-    } catch (error: any) {
-      console.error("Error burning gorilla:", error);
-      setTransactionStatus('error');
-      let errorMessage = 'Failed to burn gorilla.';
-      if (error.message?.includes('ENOT_OWNER')) {
-        errorMessage = 'You can only burn gorillas that you own.';
-      }
-      showTransactionToast('error', errorMessage);
-    } finally {
-      setTimeout(() => setTransactionStatus(null), TRANSACTION_STATUS_TIMEOUT);
-    }
+  const mintGorilla = async (index: number) => {
+    await executeTransaction(
+      'mint_gorilla',
+      [index.toString()],
+      'Minting your gorilla...',
+      'Your gorilla has been minted successfully!'
+    );
   };
 
   const calculateGorillaScore = (gorilla: Gorilla): number => {
@@ -845,7 +839,7 @@ const CryptoGorillaGame: React.FC = () => {
                   >
                     <Box position="relative" zIndex={1}>
                       {useNewCardStyle ? (
-                        <PokemonStyleCard
+                        <GorillaCardV2
                           gorilla={gorilla}
                           onMint={() => mintGorilla(index)}
                           onEvolve={() => gorilla && evolveGorilla(gorilla.id)}

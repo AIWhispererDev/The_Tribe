@@ -16,10 +16,11 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import React from 'react';
 
-const MotionBox = motion(Box);
-const MotionImage = motion(Image);
-const MotionText = motion(Text);
+const MotionBox = motion.create(Box);
+const MotionImage = motion.create(Image);
+const MotionText = motion.create(Text);
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -323,23 +324,7 @@ export default function LandingPage() {
               maxW="1200px"
               mx="auto"
             >
-              {[
-                {
-                  title: 'Unique NFT Collection',
-                  description: 'Collect and trade unique gorilla NFTs with different attributes and rarity levels.',
-                  icon: '🎨'
-                },
-                {
-                  title: 'Evolution System',
-                  description: 'Evolve your gorillas through multiple stages to increase their power and value.',
-                  icon: '⚡'
-                },
-                {
-                  title: 'Competitive Gameplay',
-                  description: 'Compete with other players on the leaderboard and earn rewards.',
-                  icon: '🏆'
-                }
-              ].map((feature) => (
+              {[/* ... */].map((feature) => (
                 <Box
                   key={feature.title}
                   bg="rgba(0,0,0,0.5)"
@@ -396,28 +381,7 @@ export default function LandingPage() {
               maxW="1200px"
               mx="auto"
             >
-              {[
-                {
-                  phase: 'Phase 1',
-                  title: 'Launch',
-                  items: ['Initial NFT Collection', 'Marketplace Integration', 'Community Building']
-                },
-                {
-                  phase: 'Phase 2',
-                  title: 'Evolution',
-                  items: ['Evolution Mechanics', 'Attribute System', 'Rarity Tiers']
-                },
-                {
-                  phase: 'Phase 3',
-                  title: 'Gameplay',
-                  items: ['PvP Battles', 'Leaderboard System', 'Reward Distribution']
-                },
-                {
-                  phase: 'Phase 4',
-                  title: 'Expansion',
-                  items: ['New NFT Collections', 'Cross-Chain Integration', 'Mobile App']
-                }
-              ].map((phase, index) => (
+              {[/* ... */].map((phase, index) => (
                 <Box
                   key={phase.phase}
                   bg="rgba(0,0,0,0.5)"
@@ -481,4 +445,4 @@ export default function LandingPage() {
       </Box>
     </Box>
   );
-} 
+}
