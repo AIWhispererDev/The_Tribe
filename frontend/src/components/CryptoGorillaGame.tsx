@@ -542,13 +542,10 @@ const CryptoGorillaGame: React.FC = () => {
         type: "entry_function_payload",
         function: fullFunctionName,
         type_arguments: [],
-        arguments: args.map(arg => {
-          // Convert numbers to strings with BCS format
-          if (typeof arg === 'number') {
-            return arg.toString();
-          }
-          return arg;
-        })
+        arguments: args,
+        // Add gas parameters
+        gas_unit_price: "100",
+        max_gas_amount: "1000"
       };
 
       console.log('Submitting transaction with payload:', payload);
@@ -608,9 +605,14 @@ const CryptoGorillaGame: React.FC = () => {
   };
 
   const mintGorilla = async (index: number) => {
+    if (!account?.address) {
+      showTransactionToast('error', 'No wallet address found');
+      return;
+    }
+
     await executeTransaction(
       'mint_gorilla',
-      [], // mint_gorilla only takes a signer parameter
+      [account.address], // Pass the signer address
       'Minting your gorilla...',
       'Your gorilla has been minted successfully!'
     );
