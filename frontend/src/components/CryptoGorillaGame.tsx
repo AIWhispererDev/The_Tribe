@@ -882,16 +882,6 @@ const CryptoGorillaGame: React.FC = () => {
   );
 };
 
-export default CryptoGorillaGame;         </TribalContainer>
-            </VStack>
-          </Container>
 
-          <AnimatePresence mode="wait">
-            {showEvolution && <EvolutionCelebration />}
-            <TransactionFeedback status={transactionStatus} />
-          </AnimatePresence>
-        </ParallaxBackground>
-      );
-    };
 
     export default CryptoGorillaGame;
