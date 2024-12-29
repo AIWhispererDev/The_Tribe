@@ -346,540 +346,540 @@ const ParallaxBackground = ({ children }: { children: React.ReactNode }) => {
                 sync: false
               }
             },
-            move: {
-              enable: true,
-              speed: 1,
-              direction: "none",
-              random: true,
-              straight: false,
-              outModes: { default: "out" }
-            }
-          },
-          interactivity: {
-            detectsOn: "canvas",
-            events: {
-              onHover: { enable: true, mode: "repulse" },
-              resize: true
-            }
-          },
-          background: {
-            color: "transparent"
-          }
-        }}
-        style={{
-          position: "absolute",
-          width: "100%",
-          height: "100%",
-          zIndex: 3
-        }}
-      />
-
-      {/* Misty Overlay */}
-      <Box
-        position="absolute"
-        inset={0}
-        backdropFilter="blur(40px)"
-        zIndex={4}
-        pointerEvents="none"
-        background="linear-gradient(180deg, rgba(10, 13, 17, 0) 0%, rgba(10, 13, 17, 0.3) 100%)"
-      />
-
-      {/* Content Container */}
-      <Box position="relative" zIndex={5}>
-        {children}
-      </Box>
-    </Box>
-  );
-};
-
-const TransactionFeedback = ({ status }: { status: 'pending' | 'success' | 'error' | null }) => {
-  if (!status) return null;
-
-  const config = {
-    pending: {
-      color: '#E5FF44',
-      icon: TreePine,
-      text: 'Transaction in progress...'
-    },
-    success: {
-      color: '#2A4C3B',
-      icon: Leaf,
-      text: 'Transaction successful!'
-    },
-    error: {
-      color: '#FF4444',
-      icon: Flame,
-      text: 'Transaction failed'
-    }
-  };
-
-  const currentConfig = config[status];
-
-  return (
-    <motion.div
-      initial={{ x: 300, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: 300, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 100 }}
-    >
-      <TribalContainer
-        position="fixed"
-        bottom="4"
-        right="4"
-        minW="300px"
-        variant="dark"
-        showVines={false}
-      >
-        <HStack spacing={4}>
-          <motion.div
-            animate={{ 
-              rotate: status === 'pending' ? 360 : 0,
-              scale: [1, 1.2, 1]
+                move: {
+                  enable: true,
+                  speed: 1,
+                  direction: "none",
+                  random: true,
+                  straight: false,
+                  outModes: { default: "out" }
+                }
+              },
+              interactivity: {
+                detectsOn: "canvas",
+                events: {
+                  onHover: { enable: true, mode: "repulse" },
+                  resize: true
+                }
+              },
+              background: {
+                color: "transparent"
+              }
             }}
-            transition={{ 
-              rotate: { duration: 2, repeat: Infinity, ease: "linear" },
-              scale: { duration: 1, repeat: Infinity }
+            style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              zIndex: 3
             }}
-          >
-            <Icon 
-              as={currentConfig.icon} 
-              w={6} 
-              h={6} 
-              color={currentConfig.color} 
-            />
-          </motion.div>
-          <Text color={currentConfig.color}>
-            {currentConfig.text}
-          </Text>
-        </HStack>
-      </TribalContainer>
-    </motion.div>
-  );
-};
+          />
 
-const TRANSACTION_STATUS_TIMEOUT = 2000; // Consistent timeout duration
+          {/* Misty Overlay */}
+          <Box
+            position="absolute"
+            inset={0}
+            backdropFilter="blur(40px)"
+            zIndex={4}
+            pointerEvents="none"
+            background="linear-gradient(180deg, rgba(10, 13, 17, 0) 0%, rgba(10, 13, 17, 0.3) 100%)"
+          />
 
-const CryptoGorillaGame: React.FC = () => {
-  const { adapter, isConnected, account } = useNightlyWallet();
-  const toast = useToast();
-  const [transactionStatus, setTransactionStatus] = useState<'pending' | 'success' | 'error' | null>(null);
-  const [tribe, setTribe] = useState<Array<Gorilla | null>>([
-    {
-      id: 'pre-minted-gorilla-1',
-      name: 'Baby Gorilla',
-      strength: 1,
-      intelligence: 1,
-      socialSkills: 1,
-      agility: 1,
-      endurance: 1,
-      leadership: 1,
-      stage: 0,
-      rarity: 'common'
-    },
-    null,
-    null,
-    null,
-    null
-  ]);
-  const [bananaTokens, setBananaTokens] = useState(0);
-  const [tribeScore, setTribeScore] = useState(0);
-  const [showEvolution, setShowEvolution] = useState(false);
-  const [useNewCardStyle, setUseNewCardStyle] = useState(false);
+          {/* Content Container */}
+          <Box position="relative" zIndex={5}>
+            {children}
+          </Box>
+        </Box>
+      );
+    };
 
-  const executeTransaction = async (
-    functionName: string,
-    args: any[],
-    pendingMessage: string,
-    successMessage: string
-  ) => {
-    if (!isConnected || !account || !adapter) {
-      showTransactionToast('error', 'Please connect your wallet first');
-      return false;
-    }
+    const TransactionFeedback = ({ status }: { status: 'pending' | 'success' | 'error' | null }) => {
+      if (!status) return null;
 
-    try {
-      setTransactionStatus('pending');
-      showTransactionToast('pending', pendingMessage);
-
-      // Construct the full function name with module address
-      const fullFunctionName = `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::${functionName}`;
-
-      // Format payload according to Nightly Wallet's expectations
-      const payload = {
-        type: "entry_function_payload",
-        function: fullFunctionName,
-        type_arguments: [],
-        arguments: args.map(arg => {
-          // Convert numbers to strings with BCS format
-          if (typeof arg === 'number') {
-            return arg.toString();
-          }
-          return arg;
-        })
+      const config = {
+        pending: {
+          color: '#E5FF44',
+          icon: TreePine,
+          text: 'Transaction in progress...'
+        },
+        success: {
+          color: '#2A4C3B',
+          icon: Leaf,
+          text: 'Transaction successful!'
+        },
+        error: {
+          color: '#FF4444',
+          icon: Flame,
+          text: 'Transaction failed'
+        }
       };
 
-      console.log('Submitting transaction with payload:', payload);
-      
-      // Submit the transaction through the wallet adapter
-      const response = await adapter.signAndSubmitTransaction(payload);
-      console.log('Transaction submitted:', response);
-      
-      if (response?.hash) {
-        await client.waitForTransaction(response.hash);
-        console.log('Transaction confirmed');
-        
-        await fetchTribeData();
+      const currentConfig = config[status];
 
-        setTransactionStatus('success');
-        showTransactionToast('success', successMessage);
-        return true;
-      } else {
-        throw new Error('Transaction failed: No transaction hash returned');
-      }
-    } catch (error: any) {
-      console.error(`Error executing ${functionName}:`, error);
-      const errorMessage = error.message || 'Please try again.';
-      setTransactionStatus('error');
-      showTransactionToast('error', `Transaction failed: ${errorMessage}`);
-      return false;
-    }
-  };
-
-  const evolveGorilla = async (gorillaId: string) => {
-    // Convert string ID to u64 string
-    const id = BigInt(gorillaId).toString();
-    
-    const success = await executeTransaction(
-      'evolve_gorilla',
-      [id],
-      'Evolving your gorilla...',
-      'Your gorilla has evolved successfully!'
-    );
-
-    if (success) {
-      setShowEvolution(true);
-      setTimeout(() => setShowEvolution(false), 1500);
-    }
-  };
-
-  const burnGorilla = async (gorillaId: string) => {
-    // Convert string ID to u64 string
-    const id = BigInt(gorillaId).toString();
-    
-    await executeTransaction(
-      'burn_gorilla',
-      [id],
-      'Burning your gorilla...',
-      'Your gorilla has been burned successfully!'
-    );
-  };
-
-  const mintGorilla = async (index: number) => {
-    await executeTransaction(
-      'mint_gorilla',
-      [], // mint_gorilla only takes a signer parameter
-      'Minting your gorilla...',
-      'Your gorilla has been minted successfully!'
-    );
-  };
-
-  const fetchTribeData = async () => {
-    if (!adapter?.publicAccount) {
-      console.log("No wallet connected");
-      return;
-    }
-
-    try {
-      console.log("Fetching tribe data for address:", adapter.publicAccount.address);
-      console.log("Using contract address:", CRYPTO_GORILLA_ADDRESS);
-      
-      const tribeResponse = await client.view({
-        function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::get_tribe`,
-        type_arguments: [],
-        arguments: [adapter.publicAccount.address],
-      });
-
-      console.log("Tribe response:", tribeResponse);
-
-      const gorillaIds = tribeResponse[0] as string[];
-      const detailedTribe = await Promise.all(gorillaIds.map(async (gorillaId: string) => {
-        console.log("Fetching info for gorilla:", gorillaId);
-        
-        const info = await client.view({
-          function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::get_gorilla_info`,
-          type_arguments: [],
-          arguments: [gorillaId],
-        });
-        
-        console.log("Gorilla info:", info);
-        
-        // Map the on-chain data to our Gorilla interface
-        return { 
-          id: gorillaId, 
-          name: `${['Baby', 'Juvenile', 'Adult', 'Silverback'][Number(info[3])]} Gorilla`,
-          strength: Number(info[0]), 
-          intelligence: Number(info[1]), 
-          socialSkills: Number(info[2]), 
-          stage: Number(info[3]),
-          agility: Number(info[4] || 1),
-          endurance: Number(info[5] || 1),
-          leadership: Number(info[6] || 1),
-          rarity: info[7] as 'common' | 'rare' | 'epic' | 'legendary'
-        };
-      }));
-
-      // Pad the tribe array with nulls if needed
-      const paddedTribe = [...detailedTribe];
-      while (paddedTribe.length < MAX_TRIBE_SIZE) {
-        paddedTribe.push(null);
-      }
-
-      setTribe(paddedTribe);
-
-      // Update tribe score from chain
-      const scoreResponse = await client.view({
-        function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::calculate_tribe_score`,
-        type_arguments: [],
-        arguments: [adapter.publicAccount.address],
-      });
-      
-      setTribeScore(Number(scoreResponse[0]));
-    } catch (error: any) {
-      console.error("Error fetching tribe data:", error);
-      
-      // More specific error messages based on the error type
-      let errorMessage = 'Failed to fetch tribe data.';
-      
-      if (error.message?.includes('Module not found')) {
-        errorMessage = 'Contract not found. Please check if the contract is deployed correctly.';
-      } else if (error.message?.includes('Function not found')) {
-        errorMessage = 'Contract function not found. Please check if the contract is up to date.';
-      } else if (error.message?.includes('Invalid arguments')) {
-        errorMessage = 'Invalid wallet address format.';
-      } else if (error.message?.includes('execution failed')) {
-        errorMessage = 'Contract execution failed. Please try again later.';
-      }
-      
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    }
-  };
-
-  React.useEffect(() => {
-    if (adapter?.publicAccount) {
-      fetchTribeData();
-    }
-  }, [adapter]);
-
-  React.useEffect(() => {
-    calculateTribeScore();
-  }, [tribe]);
-
-  const calculateTribeScore = () => {
-    const activeGorillas = tribe.filter((g): g is Gorilla => g !== null);
-    
-    // Calculate total stats
-    const totalStats = activeGorillas.reduce((sum, g) => 
-      sum + g.strength + g.intelligence + g.socialSkills + g.agility + g.endurance + g.leadership, 0);
-    const statsScore = Math.min(totalStats / PERFECT_TRIBE.totalStats, 1);
-
-    // Calculate stage distribution score
-    const stageDistribution = [0, 0, 0, 0];
-    activeGorillas.forEach(g => stageDistribution[g.stage]++);
-    const stageScore = stageDistribution.reduce((score, count, index) => 
-      score + Math.min(count / PERFECT_TRIBE.stageDistribution[index], 1), 0) / 4;
-
-    // Calculate rarity distribution score
-    const rarityDistribution = { common: 0, rare: 0, epic: 0, legendary: 0 };
-    activeGorillas.forEach(g => rarityDistribution[g.rarity]++);
-    const rarityScore = Object.entries(PERFECT_TRIBE.rarityDistribution).reduce((score, [rarity, count]) => 
-      score + Math.min(rarityDistribution[rarity as keyof typeof rarityDistribution] / count, 1), 0) / 5;
-
-    // Calculate final score (weighted average)
-    const finalScore = (statsScore * 0.4 + stageScore * 0.3 + rarityScore * 0.3) * 100;
-    setTribeScore(Math.round(finalScore));
-  };
-
-  const showTransactionToast = (type: 'pending' | 'success' | 'error', message: string) => {
-    // Close any existing pending toast
-    if (type === 'success' || type === 'error') {
-      toast.closeAll();
-    }
-
-    toast({
-      id: `transaction-toast-${Date.now()}`,
-      title: type === 'pending' ? 'Transaction Pending' : type === 'success' ? 'Success!' : 'Error!',
-      description: message,
-      status: type === 'pending' ? 'info' : type === 'success' ? 'success' : 'error',
-      duration: type === 'pending' ? 3000 : 2000,
-      isClosable: true,
-      position: 'bottom-right',
-      variant: 'solid',
-    });
-  };
-
-  const calculateGorillaScore = (gorilla: Gorilla): number => {
-    const statScore = (gorilla.strength + gorilla.intelligence + gorilla.socialSkills + 
-                       gorilla.agility + gorilla.endurance + gorilla.leadership) / 30;
-    const stageScore = gorilla.stage / 3;
-    const rarityScore = RARITY_SCORES[gorilla.rarity] / 4;
-
-    return (statScore * 0.4 + stageScore * 0.3 + rarityScore * 0.3) * 100;
-  };
-
-  const getRecommendedBurn = (): Gorilla | null => {
-    const activeGorillas = tribe.filter((g): g is Gorilla => g !== null);
-    if (activeGorillas.length <= 1) return null;
-
-    return activeGorillas.reduce((lowest, current) => 
-      calculateGorillaScore(current) < calculateGorillaScore(lowest) ? current : lowest
-    );
-  };
-
-  return (
-    <ParallaxBackground>
-      <Container maxW="container.xl" py={8}>
-        <VStack spacing={8} align="stretch">
-          <HStack justify="space-between">
-            <Text color="white" fontSize="2xl">Your Gorilla Tribe</Text>
-            <Button
-              onClick={() => setUseNewCardStyle(!useNewCardStyle)}
-              variant="outline"
-              colorScheme="purple"
-            >
-              {useNewCardStyle ? 'Classic Style' : 'Pokemon Style'}
-            </Button>
-          </HStack>
-
-          <TribalContainer>
-            <HStack spacing={8} justify="center" wrap="wrap">
-              <TribalButton
-                icon={Coins}
-                variant="primary"
-                size="lg"
-                px={8}
+      return (
+        <motion.div
+          initial={{ x: 300, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: 300, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 100 }}
+        >
+          <TribalContainer
+            position="fixed"
+            bottom="4"
+            right="4"
+            minW="300px"
+            variant="dark"
+            showVines={false}
+          >
+            <HStack spacing={4}>
+              <motion.div
+                animate={{ 
+                  rotate: status === 'pending' ? 360 : 0,
+                  scale: [1, 1.2, 1]
+                }}
+                transition={{ 
+                  rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                  scale: { duration: 1, repeat: Infinity }
+                }}
               >
-                <HStack>
-                  <Text>{bananaTokens}</Text>
-                  <Text color="rgba(229, 255, 68, 0.8)">Banana Tokens</Text>
-                </HStack>
-              </TribalButton>
-
-              <TribalButton
-                icon={Trophy}
-                variant="secondary"
-                size="lg"
-                px={8}
-              >
-                <HStack>
-                  <Text>Tribe Score:</Text>
-                  <Text color="rgba(229, 255, 68, 0.8)">{tribeScore}%</Text>
-                </HStack>
-              </TribalButton>
-
-              <TribalButton
-                icon={TreePine}
-                variant="primary"
-                size="lg"
-                px={8}
-              >
-                <HStack>
-                  <Text>Active Gorillas:</Text>
-                  <Text color="rgba(229, 255, 68, 0.8)">
-                    {tribe.filter(g => g !== null).length}/{MAX_TRIBE_SIZE}
-                  </Text>
-                </HStack>
-              </TribalButton>
+                <Icon 
+                  as={currentConfig.icon} 
+                  w={6} 
+                  h={6} 
+                  color={currentConfig.color} 
+                />
+              </motion.div>
+              <Text color={currentConfig.color}>
+                {currentConfig.text}
+              </Text>
             </HStack>
           </TribalContainer>
+        </motion.div>
+      );
+    };
 
-          <TribalDivider variant="glowing" />
+    const TRANSACTION_STATUS_TIMEOUT = 2000; // Consistent timeout duration
 
-          <Box position="relative" w="full">
-            <Grid
-              templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)' }}
-              gap={8}
-              w="full"
-              position="relative"
-            >
-              {tribe.map((gorilla, index) => (
-                <Box key={gorilla ? gorilla.id : `empty-${index}`} position="relative">
-                  {index < tribe.length - 1 && (
-                    <ConnectingLine />
-                  )}
-                  <Box 
-                    position="relative" 
-                    zIndex={1}
-                    sx={{
-                      '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        inset: 0,
-                        background: '#0A0D11',
-                        borderRadius: 'xl',
-                        zIndex: 0
-                      }
-                    }}
-                  >
-                    <Box position="relative" zIndex={1}>
-                      {useNewCardStyle ? (
-                        <GorillaCardV2
-                          gorilla={gorilla}
-                          onMint={() => mintGorilla(index)}
-                          onEvolve={() => gorilla && evolveGorilla(gorilla.id)}
-                          onBurn={() => gorilla && burnGorilla(gorilla.id)}
-                          score={gorilla ? calculateGorillaScore(gorilla) : 0}
-                          isRecommendedBurn={gorilla === getRecommendedBurn()}
-                        />
-                      ) : (
-                        <GorillaCard 
-                          gorilla={gorilla}
-                          onMint={() => mintGorilla(index)}
-                          onEvolve={() => gorilla && evolveGorilla(gorilla.id)}
-                          onBurn={() => gorilla && burnGorilla(gorilla.id)}
-                          score={gorilla ? calculateGorillaScore(gorilla) : 0}
-                          isRecommendedBurn={gorilla === getRecommendedBurn()}
-                        />
-                      )}
-                    </Box>
-                  </Box>
-                </Box>
-              ))}
-            </Grid>
-          </Box>
+    const CryptoGorillaGame: React.FC = () => {
+      const { adapter, isConnected, account } = useNightlyWallet();
+      const toast = useToast();
+      const [transactionStatus, setTransactionStatus] = useState<'pending' | 'success' | 'error' | null>(null);
+      const [tribe, setTribe] = useState<Array<Gorilla | null>>([
+        {
+          id: 'pre-minted-gorilla-1',
+          name: 'Baby Gorilla',
+          strength: 1,
+          intelligence: 1,
+          socialSkills: 1,
+          agility: 1,
+          endurance: 1,
+          leadership: 1,
+          stage: 0,
+          rarity: 'common'
+        },
+        null,
+        null,
+        null,
+        null
+      ]);
+      const [bananaTokens, setBananaTokens] = useState(0);
+      const [tribeScore, setTribeScore] = useState(0);
+      const [showEvolution, setShowEvolution] = useState(false);
+      const [useNewCardStyle, setUseNewCardStyle] = useState(false);
 
-          <TribalContainer variant="dark">
-            <VStack align="start" spacing={4}>
-              <HStack spacing={3}>
-                <Icon as={Leaf} color="#E5FF44" />
-                <Text color="gray.300" fontSize="lg">
-                  Tip: Burning a gorilla will give you 50 Banana Tokens to mint a new one.
-                </Text>
+      const executeTransaction = async (
+        functionName: string,
+        args: any[],
+        pendingMessage: string,
+        successMessage: string
+      ) => {
+        if (!isConnected || !account || !adapter) {
+          showTransactionToast('error', 'Please connect your wallet first');
+          return false;
+        }
+
+        try {
+          setTransactionStatus('pending');
+          showTransactionToast('pending', pendingMessage);
+
+          // Construct the full function name with module address
+          const fullFunctionName = `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::${functionName}`;
+
+          // Format payload according to Nightly Wallet's expectations
+          const payload = {
+            type: "entry_function_payload",
+            function: fullFunctionName,
+            type_arguments: [],
+            arguments: args.map(arg => {
+              // Convert numbers to strings with BCS format
+              if (typeof arg === 'number') {
+                return arg.toString();
+              }
+              return arg;
+            })
+          };
+
+          console.log('Submitting transaction with payload:', payload);
+          
+          // Submit the transaction through the wallet adapter
+          const response = await adapter.signAndSubmitTransaction(payload);
+          console.log('Transaction submitted:', response);
+          
+          if (response?.hash) {
+            await client.waitForTransaction(response.hash);
+            console.log('Transaction confirmed');
+            
+            await fetchTribeData();
+
+            setTransactionStatus('success');
+            showTransactionToast('success', successMessage);
+            return true;
+          } else {
+            throw new Error('Transaction failed: No transaction hash returned');
+          }
+        } catch (error: any) {
+          console.error(`Error executing ${functionName}:`, error);
+          const errorMessage = error.message || 'Please try again.';
+          setTransactionStatus('error');
+          showTransactionToast('error', `Transaction failed: ${errorMessage}`);
+          return false;
+        }
+      };
+
+      const evolveGorilla = async (gorillaId: string) => {
+        // Convert string ID to u64 string
+        const id = BigInt(gorillaId).toString();
+        
+        const success = await executeTransaction(
+          'evolve_gorilla',
+          [id],
+          'Evolving your gorilla...',
+          'Your gorilla has evolved successfully!'
+        );
+
+        if (success) {
+          setShowEvolution(true);
+          setTimeout(() => setShowEvolution(false), 1500);
+        }
+      };
+
+      const burnGorilla = async (gorillaId: string) => {
+        // Convert string ID to u64 string
+        const id = BigInt(gorillaId).toString();
+        
+        await executeTransaction(
+          'burn_gorilla',
+          [id],
+          'Burning your gorilla...',
+          'Your gorilla has been burned successfully!'
+        );
+      };
+
+      const mintGorilla = async (index: number) => {
+        await executeTransaction(
+          'mint_gorilla',
+          [], // mint_gorilla only takes a signer parameter
+          'Minting your gorilla...',
+          'Your gorilla has been minted successfully!'
+        );
+      };
+
+      const fetchTribeData = async () => {
+        if (!adapter?.publicAccount) {
+          console.log("No wallet connected");
+          return;
+        }
+
+        try {
+          console.log("Fetching tribe data for address:", adapter.publicAccount.address);
+          console.log("Using contract address:", CRYPTO_GORILLA_ADDRESS);
+          
+          const tribeResponse = await client.view({
+            function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::get_tribe`,
+            type_arguments: [],
+            arguments: [adapter.publicAccount.address],
+          });
+
+          console.log("Tribe response:", tribeResponse);
+
+          const gorillaIds = tribeResponse[0] as string[];
+          const detailedTribe = await Promise.all(gorillaIds.map(async (gorillaId: string) => {
+            console.log("Fetching info for gorilla:", gorillaId);
+            
+            const info = await client.view({
+              function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::get_gorilla_info`,
+              type_arguments: [],
+              arguments: [gorillaId],
+            });
+            
+            console.log("Gorilla info:", info);
+            
+            // Map the on-chain data to our Gorilla interface
+            return { 
+              id: gorillaId, 
+              name: `${['Baby', 'Juvenile', 'Adult', 'Silverback'][Number(info[3])]} Gorilla`,
+              strength: Number(info[0]), 
+              intelligence: Number(info[1]), 
+              socialSkills: Number(info[2]), 
+              stage: Number(info[3]),
+              agility: Number(info[4] || 1),
+              endurance: Number(info[5] || 1),
+              leadership: Number(info[6] || 1),
+              rarity: info[7] as 'common' | 'rare' | 'epic' | 'legendary'
+            };
+          }));
+
+          // Pad the tribe array with nulls if needed
+          const paddedTribe = [...detailedTribe];
+          while (paddedTribe.length < MAX_TRIBE_SIZE) {
+            paddedTribe.push(null);
+          }
+
+          setTribe(paddedTribe);
+
+          // Update tribe score from chain
+          const scoreResponse = await client.view({
+            function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::calculate_tribe_score`,
+            type_arguments: [],
+            arguments: [adapter.publicAccount.address],
+          });
+          
+          setTribeScore(Number(scoreResponse[0]));
+        } catch (error: any) {
+          console.error("Error fetching tribe data:", error);
+          
+          // More specific error messages based on the error type
+          let errorMessage = 'Failed to fetch tribe data.';
+          
+          if (error.message?.includes('Module not found')) {
+            errorMessage = 'Contract not found. Please check if the contract is deployed correctly.';
+          } else if (error.message?.includes('Function not found')) {
+            errorMessage = 'Contract function not found. Please check if the contract is up to date.';
+          } else if (error.message?.includes('Invalid arguments')) {
+            errorMessage = 'Invalid wallet address format.';
+          } else if (error.message?.includes('execution failed')) {
+            errorMessage = 'Contract execution failed. Please try again later.';
+          }
+          
+          toast({
+            title: 'Error',
+            description: errorMessage,
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+      };
+
+      React.useEffect(() => {
+        if (adapter?.publicAccount) {
+          fetchTribeData();
+        }
+      }, [adapter]);
+
+      React.useEffect(() => {
+        calculateTribeScore();
+      }, [tribe]);
+
+      const calculateTribeScore = () => {
+        const activeGorillas = tribe.filter((g): g is Gorilla => g !== null);
+        
+        // Calculate total stats
+        const totalStats = activeGorillas.reduce((sum, g) => 
+          sum + g.strength + g.intelligence + g.socialSkills + g.agility + g.endurance + g.leadership, 0);
+        const statsScore = Math.min(totalStats / PERFECT_TRIBE.totalStats, 1);
+
+        // Calculate stage distribution score
+        const stageDistribution = [0, 0, 0, 0];
+        activeGorillas.forEach(g => stageDistribution[g.stage]++);
+        const stageScore = stageDistribution.reduce((score, count, index) => 
+          score + Math.min(count / PERFECT_TRIBE.stageDistribution[index], 1), 0) / 4;
+
+        // Calculate rarity distribution score
+        const rarityDistribution = { common: 0, rare: 0, epic: 0, legendary: 0 };
+        activeGorillas.forEach(g => rarityDistribution[g.rarity]++);
+        const rarityScore = Object.entries(PERFECT_TRIBE.rarityDistribution).reduce((score, [rarity, count]) => 
+          score + Math.min(rarityDistribution[rarity as keyof typeof rarityDistribution] / count, 1), 0) / 5;
+
+        // Calculate final score (weighted average)
+        const finalScore = (statsScore * 0.4 + stageScore * 0.3 + rarityScore * 0.3) * 100;
+        setTribeScore(Math.round(finalScore));
+      };
+
+      const showTransactionToast = (type: 'pending' | 'success' | 'error', message: string) => {
+        // Close any existing pending toast
+        if (type === 'success' || type === 'error') {
+          toast.closeAll();
+        }
+
+        toast({
+          id: `transaction-toast-${Date.now()}`,
+          title: type === 'pending' ? 'Transaction Pending' : type === 'success' ? 'Success!' : 'Error!',
+          description: message,
+          status: type === 'pending' ? 'info' : type === 'success' ? 'success' : 'error',
+          duration: type === 'pending' ? 3000 : 2000,
+          isClosable: true,
+          position: 'bottom-right',
+          variant: 'solid',
+        });
+      };
+
+      const calculateGorillaScore = (gorilla: Gorilla): number => {
+        const statScore = (gorilla.strength + gorilla.intelligence + gorilla.socialSkills + 
+                           gorilla.agility + gorilla.endurance + gorilla.leadership) / 30;
+        const stageScore = gorilla.stage / 3;
+        const rarityScore = RARITY_SCORES[gorilla.rarity] / 4;
+
+        return (statScore * 0.4 + stageScore * 0.3 + rarityScore * 0.3) * 100;
+      };
+
+      const getRecommendedBurn = (): Gorilla | null => {
+        const activeGorillas = tribe.filter((g): g is Gorilla => g !== null);
+        if (activeGorillas.length <= 1) return null;
+
+        return activeGorillas.reduce((lowest, current) => 
+          calculateGorillaScore(current) < calculateGorillaScore(lowest) ? current : lowest
+        );
+      };
+
+      return (
+        <ParallaxBackground>
+          <Container maxW="container.xl" py={8}>
+            <VStack spacing={8} align="stretch">
+              <HStack justify="space-between">
+                <Text color="white" fontSize="2xl">Your Gorilla Tribe</Text>
+                <Button
+                  onClick={() => setUseNewCardStyle(!useNewCardStyle)}
+                  variant="outline"
+                  colorScheme="purple"
+                >
+                  {useNewCardStyle ? 'Classic Style' : 'Pokemon Style'}
+                </Button>
               </HStack>
-              {getRecommendedBurn() && (
-                <HStack spacing={3}>
-                  <Icon as={Flame} color="#E5FF44" />
-                  <Text color="gray.300" fontSize="lg">
-                    Consider burning {getRecommendedBurn()?.name} (Score: {calculateGorillaScore(getRecommendedBurn()!).toFixed(2)})
-                  </Text>
+
+              <TribalContainer>
+                <HStack spacing={8} justify="center" wrap="wrap">
+                  <TribalButton
+                    icon={Coins}
+                    variant="primary"
+                    size="lg"
+                    px={8}
+                  >
+                    <HStack>
+                      <Text>{bananaTokens}</Text>
+                      <Text color="rgba(229, 255, 68, 0.8)">Banana Tokens</Text>
+                    </HStack>
+                  </TribalButton>
+
+                  <TribalButton
+                    icon={Trophy}
+                    variant="secondary"
+                    size="lg"
+                    px={8}
+                  >
+                    <HStack>
+                      <Text>Tribe Score:</Text>
+                      <Text color="rgba(229, 255, 68, 0.8)">{tribeScore}%</Text>
+                    </HStack>
+                  </TribalButton>
+
+                  <TribalButton
+                    icon={TreePine}
+                    variant="primary"
+                    size="lg"
+                    px={8}
+                  >
+                    <HStack>
+                      <Text>Active Gorillas:</Text>
+                      <Text color="rgba(229, 255, 68, 0.8)">
+                        {tribe.filter(g => g !== null).length}/{MAX_TRIBE_SIZE}
+                      </Text>
+                    </HStack>
+                  </TribalButton>
                 </HStack>
-              )}
+              </TribalContainer>
+
+              <TribalDivider variant="glowing" />
+
+              <Box position="relative" w="full">
+                <Grid
+                  templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)' }}
+                  gap={8}
+                  w="full"
+                  position="relative"
+                >
+                  {tribe.map((gorilla, index) => (
+                    <Box key={gorilla ? gorilla.id : `empty-${index}`} position="relative">
+                      {index < tribe.length - 1 && (
+                        <ConnectingLine />
+                      )}
+                      <Box 
+                        position="relative" 
+                        zIndex={1}
+                        sx={{
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            inset: 0,
+                            background: '#0A0D11',
+                            borderRadius: 'xl',
+                            zIndex: 0
+                          }
+                        }}
+                      >
+                        <Box position="relative" zIndex={1}>
+                          {useNewCardStyle ? (
+                            <GorillaCardV2
+                              gorilla={gorilla}
+                              onMint={() => mintGorilla(index)}
+                              onEvolve={() => gorilla && evolveGorilla(gorilla.id)}
+                              onBurn={() => gorilla && burnGorilla(gorilla.id)}
+                              score={gorilla ? calculateGorillaScore(gorilla) : 0}
+                              isRecommendedBurn={gorilla === getRecommendedBurn()}
+                            />
+                          ) : (
+                            <GorillaCard 
+                              gorilla={gorilla}
+                              onMint={() => mintGorilla(index)}
+                              onEvolve={() => gorilla && evolveGorilla(gorilla.id)}
+                              onBurn={() => gorilla && burnGorilla(gorilla.id)}
+                              score={gorilla ? calculateGorillaScore(gorilla) : 0}
+                              isRecommendedBurn={gorilla === getRecommendedBurn()}
+                            />
+                          )}
+                        </Box>
+                      </Box>
+                    </Box>
+                  ))}
+                </Grid>
+              </Box>
+
+              <TribalContainer variant="dark">
+                <VStack align="start" spacing={4}>
+                  <HStack spacing={3}>
+                    <Icon as={Leaf} color="#E5FF44" />
+                    <Text color="gray.300" fontSize="lg">
+                      Tip: Burning a gorilla will give you 50 Banana Tokens to mint a new one.
+                    </Text>
+                  </HStack>
+                  {getRecommendedBurn() && (
+                    <HStack spacing={3}>
+                      <Icon as={Flame} color="#E5FF44" />
+                      <Text color="gray.300" fontSize="lg">
+                        Consider burning {getRecommendedBurn()?.name} (Score: {calculateGorillaScore(getRecommendedBurn()!).toFixed(2)})
+                      </Text>
+                    </HStack>
+                  )}
+                </VStack>
+              </TribalContainer>
             </VStack>
-          </TribalContainer>
-        </VStack>
-      </Container>
+          </Container>
 
-      <AnimatePresence mode="wait">
-        {showEvolution && <EvolutionCelebration />}
-        <TransactionFeedback status={transactionStatus} />
-      </AnimatePresence>
-    </ParallaxBackground>
-  );
-};
+          <AnimatePresence mode="wait">
+            {showEvolution && <EvolutionCelebration />}
+            <TransactionFeedback status={transactionStatus} />
+          </AnimatePresence>
+        </ParallaxBackground>
+      );
+    };
 
-export default CryptoGorillaGame;
+    export default CryptoGorillaGame;
