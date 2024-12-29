@@ -542,16 +542,24 @@ const CryptoGorillaGame: React.FC = () => {
         type: "entry_function_payload",
         function: fullFunctionName,
         type_arguments: [],
-        arguments: args,
-        // Add gas parameters
+        arguments: args.map(arg => {
+          // Convert numeric strings to numbers
+          if (typeof arg === 'string' && !isNaN(Number(arg))) {
+            return Number(arg);
+          }
+          return arg;
+        }),
         gas_unit_price: "100",
         max_gas_amount: "1000"
       };
 
-      console.log('Submitting transaction with payload:', payload);
+      // Ensure the payload is properly serialized
+      const serializedPayload = JSON.parse(JSON.stringify(payload));
+
+      console.log('Submitting transaction with payload:', serializedPayload);
       
       // Submit the transaction through the wallet adapter
-      const response = await adapter.signAndSubmitTransaction(payload);
+      const response = await adapter.signAndSubmitTransaction(serializedPayload);
       console.log('Transaction submitted:', response);
       
       if (response?.hash) {
@@ -576,12 +584,21 @@ const CryptoGorillaGame: React.FC = () => {
   };
 
   const evolveGorilla = async (gorillaId: string) => {
-    // Convert string ID to u64 string
-    const id = BigInt(gorillaId).toString();
+    // Skip evolution for pre-minted gorillas
+    if (gorillaId.startsWith('pre-minted')) {
+      toast({
+        title: 'Cannot evolve',
+        description: 'Pre-minted gorillas cannot be evolved',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
     
     const success = await executeTransaction(
       'evolve_gorilla',
-      [id],
+      [gorillaId], // Pass the raw string ID
       'Evolving your gorilla...',
       'Your gorilla has evolved successfully!'
     );
