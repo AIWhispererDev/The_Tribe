@@ -584,18 +584,6 @@ const CryptoGorillaGame: React.FC = () => {
   };
 
   const evolveGorilla = async (gorillaId: string) => {
-    // Skip evolution for pre-minted gorillas
-    if (gorillaId.startsWith('pre-minted')) {
-      toast({
-        title: 'Cannot evolve',
-        description: 'Pre-minted gorillas cannot be evolved',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-    
     const success = await executeTransaction(
       'evolve_gorilla',
       [gorillaId], // Pass the raw string ID
