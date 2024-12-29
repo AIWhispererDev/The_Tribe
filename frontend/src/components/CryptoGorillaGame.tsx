@@ -459,6 +459,39 @@ const TransactionFeedback = ({ status }: { status: 'pending' | 'success' | 'erro
 
 const TRANSACTION_STATUS_TIMEOUT = 2000; // Consistent timeout duration
 
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class CryptoGorillaErrorBoundary extends React.Component<{}, ErrorBoundaryState> {
+  constructor(props: {}) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('CryptoGorillaGame error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Box p={4} bg="red.100" color="red.900">
+          <Text fontSize="xl">Something went wrong!</Text>
+          <Text>{this.state.error?.message}</Text>
+        </Box>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const CryptoGorillaGame: React.FC = () => {
   const { adapter, isConnected, account } = useNightlyWallet();
   const toast = useToast();
@@ -584,8 +617,8 @@ const CryptoGorillaGame: React.FC = () => {
   };
 
   const fetchTribeData = async () => {
-    if (!adapter?.publicAccount) {
-      console.log("No wallet connected");
+    if (!adapter || !adapter.publicAccount || !adapter.publicAccount.address) {
+      console.log("No wallet connected or invalid adapter configuration");
       return;
     }
 
@@ -593,7 +626,7 @@ const CryptoGorillaGame: React.FC = () => {
       console.log("Fetching tribe data for address:", adapter.publicAccount.address);
       console.log("Using contract address:", CRYPTO_GORILLA_ADDRESS);
       
-      const tribeResponse = await client.view({
+      const tribeResponse = await client.view<string[]>({
         function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::get_tribe`,
         type_arguments: [],
         arguments: [adapter.publicAccount.address],
@@ -605,11 +638,16 @@ const CryptoGorillaGame: React.FC = () => {
       const detailedTribe = await Promise.all(gorillaIds.map(async (gorillaId: string) => {
         console.log("Fetching info for gorilla:", gorillaId);
         
-        const info = await client.view({
+        const info = await client.view<[number, number, number, number, number, number, number, string]>({
           function: `${CRYPTO_GORILLA_ADDRESS}::gorilla_game_module::get_gorilla_info`,
           type_arguments: [],
           arguments: [gorillaId],
         });
+
+        if (!info || info.length < 8) {
+          console.error('Invalid gorilla info response:', info);
+          return null;
+        }
         
         console.log("Gorilla info:", info);
         
@@ -742,7 +780,8 @@ const CryptoGorillaGame: React.FC = () => {
   };
 
   return (
-    <ParallaxBackground>
+    <CryptoGorillaErrorBoundary>
+      <ParallaxBackground>
       <Container maxW="container.xl" py={8}>
         <VStack spacing={8} align="stretch">
           <HStack justify="space-between">
@@ -878,7 +917,8 @@ const CryptoGorillaGame: React.FC = () => {
         {showEvolution && <EvolutionCelebration />}
         <TransactionFeedback status={transactionStatus} />
       </AnimatePresence>
-    </ParallaxBackground>
+      </ParallaxBackground>
+    </CryptoGorillaErrorBoundary>
   );
 };
 
