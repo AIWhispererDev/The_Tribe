@@ -10,11 +10,13 @@ import {
 } from '@chakra-ui/react';
 import { Menu } from 'lucide-react';
 import WalletSelector from './WalletSelector';
+import { useWallet } from '../contexts/WalletContext';
 
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const { adapter } = useWallet();
 
   const navItems = [
     { path: '/tribe', label: 'MY TRIBE' },
@@ -24,64 +26,56 @@ export default function Header() {
   ];
 
   return (
-    <Box 
-      bg="rgba(0, 0, 0, 0.9)"
-      borderBottom="1px solid"
-      borderColor="rgba(204, 255, 0, 0.2)"
+    <Box
+      as="header"
+      position="fixed"
+      w="100%"
+      zIndex={10}
       backdropFilter="blur(10px)"
-      py={4}
-      position="relative"
-      _after={{
-        content: '""',
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '1px',
-        background: 'linear-gradient(90deg, transparent, rgba(204, 255, 0, 0.5), transparent)'
-      }}
+      bg="rgba(0, 0, 0, 0.3)"
+      borderBottom="1px solid"
+      borderColor="whiteAlpha.200"
     >
       <Container maxW="container.xl">
-        <Flex justify="space-between" align="center">
-          <Link 
-            as={RouterLink} 
+        <Flex justify="space-between" align="center" h="4rem">
+          {/* Logo */}
+          <Link
+            as={RouterLink}
             to="/"
-            fontSize="2xl"
+            fontSize="xl"
             fontWeight="bold"
-            color="#CCFF00"
-            _hover={{ 
-              textDecoration: 'none',
-              color: '#E5FF44'
-            }}
+            color="white"
+            _hover={{ textDecoration: 'none', color: 'purple.300' }}
           >
-            CRYPTOGORILLA
+            CryptoGorilla
           </Link>
 
-          {isMobile ? (
-            <Icon as={Menu} boxSize={6} color="white" />
-          ) : (
-            <HStack spacing={8} align="center">
+          {/* Navigation */}
+          {!isMobile && (
+            <HStack spacing={8}>
               {navItems.map((item) => (
                 <Link
                   key={item.path}
                   as={RouterLink}
                   to={item.path}
-                  color={location.pathname === item.path ? '#CCFF00' : 'white'}
-                  fontWeight="medium"
-                  fontSize="sm"
-                  _hover={{ 
-                    color: '#E5FF44',
-                    textDecoration: 'none'
-                  }}
-                  transition="color 0.2s"
+                  color={location.pathname === item.path ? 'purple.300' : 'white'}
+                  fontWeight={location.pathname === item.path ? 'bold' : 'normal'}
+                  _hover={{ color: 'purple.300' }}
                 >
                   {item.label}
                 </Link>
               ))}
-              <Box ml={4}>
-                <WalletSelector />
-              </Box>
             </HStack>
+          )}
+
+          {/* Wallet */}
+          <WalletSelector adapter={adapter} />
+
+          {/* Mobile Menu */}
+          {isMobile && (
+            <Box color="white" cursor="pointer">
+              <Icon as={Menu} boxSize={6} />
+            </Box>
           )}
         </Flex>
       </Container>

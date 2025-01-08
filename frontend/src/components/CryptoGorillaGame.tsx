@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Container, Text, VStack, HStack, Grid, useToast, Icon, Button } from '@chakra-ui/react';
 import { Coins, Trophy, Leaf, TreePine, Flame } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
-import { useNightlyWallet } from '../contexts/NightlyWalletContext';
+import { NightlyConnectAptosAdapter } from '@nightlylabs/wallet-selector-aptos';
+import { useWallet } from '../contexts/WalletContext';
 
 // Components
 import GorillaCard from './GorillaCard';
@@ -21,7 +22,7 @@ import { calculateTribeScore, calculateGorillaScore, getRecommendedBurn } from '
 
 const CryptoGorillaGame: React.FC = () => {
   const toast = useToast();
-  const { isConnected } = useNightlyWallet();
+  const { adapter, isInitializing } = useWallet();
   const [useNewCardStyle, setUseNewCardStyle] = React.useState(false);
   const [showEvolution, setShowEvolution] = React.useState(false);
 
@@ -47,150 +48,151 @@ const CryptoGorillaGame: React.FC = () => {
   };
 
   return (
-    <ParallaxBackground>
-      <Container maxW="container.xl" py={8}>
-        <VStack spacing={8} align="stretch">
-          <AnimatePresence>
-            {showEvolution && (
-              <EvolutionCelebration onComplete={() => setShowEvolution(false)} />
-            )}
-          </AnimatePresence>
+    <Box position="relative" minH="100vh">
+      <ParallaxBackground>
+        <Container maxW="container.xl" p={4}>
+          <VStack spacing={8} align="stretch">
+            <AnimatePresence>
+              {showEvolution && (
+                <EvolutionCelebration onComplete={() => setShowEvolution(false)} />
+              )}
+            </AnimatePresence>
 
-          <AnimatePresence>
-            {transactionStatus && (
-              <TransactionFeedback status={transactionStatus} />
-            )}
-          </AnimatePresence>
+            <AnimatePresence>
+              {transactionStatus && (
+                <TransactionFeedback status={transactionStatus} />
+              )}
+            </AnimatePresence>
 
-          {/* Header with Title and Style Toggle */}
-          <HStack justify="space-between">
-            <Text color="white" fontSize="2xl">Your Gorilla Tribe</Text>
-            <Button
-              onClick={() => setUseNewCardStyle(!useNewCardStyle)}
-              variant="outline"
-              colorScheme="purple"
-            >
-              {useNewCardStyle ? 'Classic Style' : 'Pokemon Style'}
-            </Button>
-          </HStack>
-
-          {/* Stats Buttons */}
-          <TribalContainer>
-            <HStack spacing={8} justify="center" wrap="wrap">
-              <TribalButton
-                icon={Coins}
-                variant="primary"
-                size="lg"
-                px={8}
+            {/* Header with Title and Style Toggle */}
+            <HStack justify="space-between">
+              <Text color="white" fontSize="2xl">Your Gorilla Tribe</Text>
+              <Button
+                onClick={() => setUseNewCardStyle(!useNewCardStyle)}
+                variant="outline"
+                colorScheme="purple"
               >
-                <HStack>
-                  <Text>{bananaTokens}</Text>
-                  <Text color="rgba(229, 255, 68, 0.8)">Banana Tokens</Text>
-                </HStack>
-              </TribalButton>
-
-              <TribalButton
-                icon={Trophy}
-                variant="secondary"
-                size="lg"
-                px={8}
-              >
-                <HStack>
-                  <Text>Tribe Score:</Text>
-                  <Text color="rgba(229, 255, 68, 0.8)">{tribeScore}%</Text>
-                </HStack>
-              </TribalButton>
-
-              <TribalButton
-                icon={TreePine}
-                variant="primary"
-                size="lg"
-                px={8}
-              >
-                <HStack>
-                  <Text>Active Gorillas:</Text>
-                  <Text color="rgba(229, 255, 68, 0.8)">
-                    {tribe.filter(g => g !== null).length}/5
-                  </Text>
-                </HStack>
-              </TribalButton>
+                {useNewCardStyle ? 'Classic Style' : 'Pokemon Style'}
+              </Button>
             </HStack>
-          </TribalContainer>
 
-          <TribalDivider variant="glowing" />
-
-          <Grid
-            templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)' }}
-            gap={8}
-            w="full"
-            position="relative"
-          >
-            {tribe.map((gorilla, index) => (
-              <Box key={gorilla ? gorilla.id : `empty-${index}`} position="relative">
-                {index < tribe.length - 1 && (
-                  <ConnectingLine />
-                )}
-                <Box 
-                  position="relative" 
-                  zIndex={1}
-                  sx={{
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      inset: 0,
-                      background: '#0A0D11',
-                      borderRadius: 'xl',
-                      zIndex: 0
-                    }
-                  }}
+            {/* Stats Buttons */}
+            <TribalContainer>
+              <HStack spacing={8} justify="center" wrap="wrap">
+                <TribalButton
+                  icon={Coins}
+                  variant="primary"
+                  size="lg"
+                  px={8}
                 >
-                  <Box position="relative" zIndex={1}>
-                    {useNewCardStyle ? (
-                      <GorillaCardV2
-                        gorilla={gorilla}
-                        onMint={() => mintGorilla(index)}
-                        onEvolve={() => gorilla && evolveGorilla(gorilla.id)}
-                        onBurn={() => gorilla && burnGorilla(gorilla.id)}
-                        score={gorilla ? calculateGorillaScore(gorilla) : 0}
-                        isRecommendedBurn={gorilla === getRecommendedBurn()}
-                      />
-                    ) : (
-                      <GorillaCard 
-                        gorilla={gorilla}
-                        onMint={() => mintGorilla(index)}
-                        onEvolve={() => gorilla && evolveGorilla(gorilla.id)}
-                        onBurn={() => gorilla && burnGorilla(gorilla.id)}
-                        score={gorilla ? calculateGorillaScore(gorilla) : 0}
-                        isRecommendedBurn={gorilla === getRecommendedBurn()}
-                      />
-                    )}
+                  <HStack>
+                    <Text>{bananaTokens}</Text>
+                    <Text color="rgba(229, 255, 68, 0.8)">Banana Tokens</Text>
+                  </HStack>
+                </TribalButton>
+
+                <TribalButton
+                  icon={Trophy}
+                  variant="secondary"
+                  size="lg"
+                  px={8}
+                >
+                  <HStack>
+                    <Text>Tribe Score:</Text>
+                    <Text color="rgba(229, 255, 68, 0.8)">{tribeScore}%</Text>
+                  </HStack>
+                </TribalButton>
+
+                <TribalButton
+                  icon={TreePine}
+                  variant="primary"
+                  size="lg"
+                  px={8}
+                >
+                  <HStack>
+                    <Text>Active Gorillas:</Text>
+                    <Text color="rgba(229, 255, 68, 0.8)">
+                      {tribe.filter(g => g !== null).length}/5
+                    </Text>
+                  </HStack>
+                </TribalButton>
+              </HStack>
+            </TribalContainer>
+
+            <TribalDivider variant="glowing" />
+
+            <Grid
+              templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)' }}
+              gap={8}
+              w="full"
+              position="relative"
+            >
+              {tribe.map((gorilla, index) => (
+                <Box key={gorilla ? gorilla.id : `empty-${index}`} position="relative">
+                  {index < tribe.length - 1 && (
+                    <ConnectingLine />
+                  )}
+                  <Box 
+                    position="relative" 
+                    zIndex={1}
+                    sx={{
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        inset: 0,
+                        background: '#0A0D11',
+                        borderRadius: 'xl',
+                        zIndex: 0
+                      }
+                    }}
+                  >
+                    <Box position="relative" zIndex={1}>
+                      {useNewCardStyle ? (
+                        <GorillaCardV2
+                          gorilla={gorilla}
+                          onMint={() => mintGorilla(index)}
+                          onEvolve={() => gorilla && evolveGorilla(gorilla.id)}
+                          onBurn={() => gorilla && burnGorilla(gorilla.id)}
+                          score={gorilla ? calculateGorillaScore(gorilla) : 0}
+                        />
+                      ) : (
+                        <GorillaCard 
+                          gorilla={gorilla}
+                          onMint={() => mintGorilla(index)}
+                          onEvolve={() => gorilla && evolveGorilla(gorilla.id)}
+                          onBurn={() => gorilla && burnGorilla(gorilla.id)}
+                          score={gorilla ? calculateGorillaScore(gorilla) : 0}
+                          isRecommendedBurn={gorilla === getRecommendedBurn()}
+                        />
+                      )}
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
-            ))}
-          </Grid>
+              ))}
+            </Grid>
 
-          <TribalContainer variant="dark">
-            <VStack align="start" spacing={4}>
-              <HStack spacing={3}>
-                <Icon as={Leaf} color="#E5FF44" />
-                <Text color="gray.300" fontSize="lg">
-                  Tip: Burning a gorilla will give you 50 Banana Tokens to mint a new one.
-                </Text>
-              </HStack>
-              {getRecommendedBurn() && (
+            <TribalContainer variant="dark">
+              <VStack align="start" spacing={4}>
                 <HStack spacing={3}>
-                  <Icon as={Flame} color="#E5FF44" />
+                  <Icon as={Leaf} color="#E5FF44" />
                   <Text color="gray.300" fontSize="lg">
-                    Consider burning {getRecommendedBurn()?.name} (Score: {calculateGorillaScore(getRecommendedBurn()!).toFixed(2)})
+                    Tip: Burning a gorilla will give you 50 Banana Tokens to mint a new one.
                   </Text>
                 </HStack>
-              )}
-            </VStack>
-          </TribalContainer>
-        </VStack>
-      </Container>
-    </ParallaxBackground>
+                {getRecommendedBurn() && (
+                  <HStack spacing={3}>
+                    <Icon as={Flame} color="#E5FF44" />
+                    <Text color="gray.300" fontSize="lg">
+                      Consider burning {getRecommendedBurn()?.name} (Score: {calculateGorillaScore(getRecommendedBurn()!).toFixed(2)})
+                    </Text>
+                  </HStack>
+                )}
+              </VStack>
+            </TribalContainer>
+          </VStack>
+        </Container>
+      </ParallaxBackground>
+    </Box>
   );
 };
 

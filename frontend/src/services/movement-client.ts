@@ -1,13 +1,14 @@
 import { Network } from '@aptos-labs/ts-sdk';
+import { MOVEMENT_NETWORK } from '../misc/adapter';
 
 // Network configuration
 export const NETWORK = Network.CUSTOM;
-export const FULL_NODE = import.meta.env.VITE_NODE_URL || "http://127.0.0.1:8080/v1";
-export const INDEXER_NODE = import.meta.env.VITE_INDEXER_URL || "http://127.0.0.1:8080/v1";
+export const FULL_NODE = MOVEMENT_NETWORK.url;
+export const INDEXER_NODE = MOVEMENT_NETWORK.url;
 
 // Chain configuration
-export const CHAIN_ID = 4;  // Local testnet chain ID
-export const NETWORK_NAME = "Local Testnet";
+export const CHAIN_ID = MOVEMENT_NETWORK.chainId;  // Movement testnet chain ID
+export const NETWORK_NAME = "Movement";
 export const NETWORK_CURRENCY = "MOVE";
 
 // Contract addresses

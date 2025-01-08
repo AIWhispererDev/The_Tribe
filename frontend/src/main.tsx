@@ -1,16 +1,16 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import App from './App'
-import LandingPage from './components/LandingPage'
-import { ChakraProvider } from '@chakra-ui/react'
-import { Box } from '@chakra-ui/react'
-import Header from './components/Header'
-import TribePage from './components/TribePage'
-import MintPage from './components/MintPage'
-import EvolvePage from './components/EvolvePage'
-import LeaderboardPage from './components/LeaderboardPage'
-import { NightlyWalletProvider } from './contexts/NightlyWalletContext'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ChakraProvider, Box, Container } from '@chakra-ui/react';
+import { theme } from './styles/theme';
+import App from './App';
+import './index.css';
+import LandingPage from './components/LandingPage';
+import TribePage from './components/TribePage';
+import MintPage from './components/MintPage';
+import EvolvePage from './components/EvolvePage';
+import LeaderboardPage from './components/LeaderboardPage';
+import Header from './components/Header';
 
 // Game route wrapper component
 const GameRouteWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -57,27 +57,27 @@ const GameRouteWrapper = ({ children }: { children: React.ReactNode }) => (
       minHeight="100vh"
       pt="64px" // Reduced padding to match header height
     >
-      {children}
+      <Container maxW="container.xl" p={4}>
+        {children}
+      </Container>
     </Box>
   </Box>
 );
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <ChakraProvider>
-        <NightlyWalletProvider>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/game" element={<GameRouteWrapper><App /></GameRouteWrapper>} />
-            <Route path="/tribe" element={<GameRouteWrapper><TribePage /></GameRouteWrapper>} />
-            <Route path="/mint" element={<GameRouteWrapper><MintPage /></GameRouteWrapper>} />
-            <Route path="/evolve" element={<GameRouteWrapper><EvolvePage /></GameRouteWrapper>} />
-            <Route path="/leaderboard" element={<GameRouteWrapper><LeaderboardPage /></GameRouteWrapper>} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </NightlyWalletProvider>
+      <ChakraProvider theme={theme}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/game" element={<GameRouteWrapper><App /></GameRouteWrapper>} />
+          <Route path="/tribe" element={<GameRouteWrapper><TribePage /></GameRouteWrapper>} />
+          <Route path="/mint" element={<GameRouteWrapper><MintPage /></GameRouteWrapper>} />
+          <Route path="/evolve" element={<GameRouteWrapper><EvolvePage /></GameRouteWrapper>} />
+          <Route path="/leaderboard" element={<GameRouteWrapper><LeaderboardPage /></GameRouteWrapper>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </ChakraProvider>
     </BrowserRouter>
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);
